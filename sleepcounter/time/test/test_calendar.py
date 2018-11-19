@@ -2,8 +2,8 @@ import datetime
 from unittest import mock
 import unittest
 
-from calendar import Calendar
-from calendar import DateLibrary
+from sleepcounter.time.calendar import Calendar
+from sleepcounter.time.datelibrary import DateLibrary
 
 # TODO: same date every year
 BONFIRE_NIGHT = datetime.datetime(2018, 11, 5)
@@ -36,6 +36,13 @@ class CalendarDateKeeping(unittest.TestCase):
             date_library = DateLibrary({'foo': CHRISTMAS_DAY})
             calendar = Calendar(date_library)
             self.assertEqual(2, calendar.days_to_event('foo'))
+
+    def test_seconds_to_xmas(self):
+        today = datetime.datetime(2018, 12, 23)
+        with mock_datetime(target=today):
+            date_library = DateLibrary({'foo': CHRISTMAS_DAY})
+            calendar = Calendar(date_library)
+            self.assertEqual(2 * 24 * 3600, calendar.seconds_to_event('foo'))
 
     def test_next_event_to_happen(self):
         today = datetime.datetime(2018, 10, 14)
