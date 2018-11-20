@@ -39,7 +39,7 @@ class LinearStageWidget(BaseWidget, Stage):
             else:
                 seconds_done = \
                     (self._total_seconds - calendar.seconds_to_next_event)
-                pos = seconds_done / self._total_seconds * MAX_STAGE_LIMIT
+                pos = int(seconds_done / self._total_seconds * MAX_STAGE_LIMIT)
                 LOGGER.info("{} sec to next event. Updating position to {}"
                     .format(calendar.seconds_to_next_event, pos))
                 self.position = pos

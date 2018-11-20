@@ -47,7 +47,7 @@ def mock_datetime(target):
 
     return patch.object(datetime, 'datetime', MockedDatetime)
 
-class ControllerIntegrationTestGroup(unittest.TestCase):
+class ControllerIntegrationLinearStage(unittest.TestCase):
 
     def setUp(self):
         self.controller = Controller(CALENDAR)
