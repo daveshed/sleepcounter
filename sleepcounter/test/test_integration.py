@@ -4,14 +4,17 @@ import unittest
 from unittest.mock import Mock, patch
 
 from sleepcounter.controller import Controller
-from sleepcounter.time.calendar import Calendar
+from sleepcounter.time.calendar import Calendar, _WAKE_UP_TIME
 from sleepcounter.time.datelibrary import DateLibrary
-# from sleepcounter.widget.display import LedMatrixWidget
-#################### patch gpio module before import ###########################
+################# patch hardware specific modules before import ################
 import sys
-mock_gpio = Mock()
+mock_led = Mock()
+mock_matrix = Mock()
+mock_led.matrix = Mock(return_value=mock_matrix)
 # This only seems to work in python 3.7
-sys.modules['RPi.GPIO'] = mock_gpio
+sys.modules['RPi.GPIO'] = Mock()
+sys.modules['max7219.led'] = mock_led
+from sleepcounter.widget.display import LedMatrixWidget
 from sleepcounter.widget.stage import LinearStageWidget, MAX_STAGE_LIMIT
 ################################################################################
 
@@ -47,27 +50,50 @@ def mock_datetime(target):
 
     return patch.object(datetime, 'datetime', MockedDatetime)
 
-class ControllerIntegrationLinearStage(unittest.TestCase):
+
+class ControllerIntegration(unittest.TestCase):
 
     def setUp(self):
+        mock_led.reset_mock()
+        mock_matrix.reset_mock()
         self.controller = Controller(CALENDAR)
         self.stage = LinearStageWidget(
                 motor=Mock(),
                 end_stop=Mock()
             )
         self.controller.register_widget(self.stage)
+        self.display = LedMatrixWidget()
+        self.controller.register_widget(self.display)
 
     def test_linear_stage_updates_position(self):
-        days_to_event = 10
-        today = CHRISTMAS_DAY - datetime.timedelta(days=days_to_event)
+        today = datetime.datetime(
+            year=2018,
+            month=12,
+            day=23,
+            hour=12,
+            minute=10)
         with mock_datetime(target=today):
             self.controller.update_widgets()
         self.assertEqual(0, self.stage.position)
-
-        tomorrow = today + datetime.timedelta(days=1)
+        deadline = datetime.datetime.combine(CHRISTMAS_DAY, _WAKE_UP_TIME)
+        time_to_event = deadline - today
+        time_elapsed = datetime.timedelta(days=1)
+        tomorrow = today + time_elapsed
         with mock_datetime(target=tomorrow):
             self.controller.update_widgets()
-        expected_position = 1 / 10 * MAX_STAGE_LIMIT
+        expected_position = \
+            int(time_elapsed / time_to_event * MAX_STAGE_LIMIT)
         self.assertEqual(expected_position, self.stage.position)
-    
-    #TODO: test for position updated as seconds elapse
+
+    def test_led_matrix_updates_display(self):
+        today = datetime.datetime(
+            year=2018,
+            month=12,
+            day=23,
+            hour=12,
+            minute=10)
+        expected_sleeps = 2
+        with mock_datetime(target=today):
+            self.controller.update_widgets()
+        mock_matrix.show_message.assert_called_with(str(expected_sleeps))
+        

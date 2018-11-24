@@ -15,7 +15,15 @@ class DateLibrary:
 
     def get_date(self, ev):
         return self._events[ev]
-        
+    
+    def get_event(self, search_date):
+        event = None
+        for name, date in self.events.items():
+            if date == search_date:
+                event = name
+                return event
+        return event
+
     def remove_event(self, ev):
         try:
             del self._events[ev]

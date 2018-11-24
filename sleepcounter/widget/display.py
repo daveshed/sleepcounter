@@ -1,19 +1,22 @@
 import logging
 
-from max7219 import led
+from max7219.led import matrix
 
 from sleepcounter.widget.base import BaseWidget
 
 
 LOGGER = logging.getLogger("display widget") 
 
-display = led.matrix(cascaded=4)
+
+display = matrix(cascaded=4)
+# we need to create display then set speed and then recreate so that spped is correct when needed.
+# better would be to create the spi instance and pass this into the constructor to instantiate matrix
 display._spi.max_speed_hz = 7800000
-display = led.matrix(cascaded=4)
+display = matrix(cascaded=4)
 display.orientation(90)
-display.brightness(1)
+display.brightness(2)
 display.clear()
-display.show_message('READY!')
+display.show_message('Ready')
 
 
 class LedMatrixWidget(BaseWidget):
@@ -22,19 +25,14 @@ class LedMatrixWidget(BaseWidget):
     """
     def __init__(self):
         LOGGER.info("Intantiating")
-        # led.matrix.__init__(self, cascaded=4)
-        # led.matrix._spi.max_speed_hz = 7800000
-        # self.orientation(90)
-        # self.brightness(2)
-        # self.clear()
         
     def update(self, calendar):
+        sleeps = calendar.sleeps_to_next_event
         msg = "{} in {} sleeps".format(
-            calendar.next_event, calendar.days_to_next_event)
+            calendar.next_event, sleeps)
         LOGGER.info(
             "Updating with calendar {}. Setting message to {}"
             .format(calendar, msg))
         display.show_message(msg)
-        LOGGER.info("Setting message to {}".format(calendar.days_to_next_event))
-        display.show_message(
-            str(calendar.days_to_next_event))
+        LOGGER.info("Setting message to {}".format(sleeps))
+        display.show_message(str(sleeps))

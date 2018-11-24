@@ -1,7 +1,18 @@
-import logging
 import datetime
+import logging
+from math import ceil
 
 logger = logging.getLogger("calendar")
+
+_WAKE_UP_TIME = datetime.time(
+    hour=6,
+    minute=30,
+    second=0)
+_BEDTIME = datetime.time(
+    hour=19,
+    minute=0,
+    second=0)
+_SECONDS_PER_DAY = 24 * 3600
 
 class Calendar:
     """
@@ -12,29 +23,31 @@ class Calendar:
         logger.info("Instantiated with date_library {}".format(date_library))
         self.date_library = date_library
 
-    def time_to_event(self, ev):
-        date = self.date_library.get_date(ev)
-        delta = date - datetime.datetime.today()
-        logger.info("Time to event {} is {}".format(ev, delta))
-        return delta
-
     def seconds_to_event(self, ev):
-        ret_val = self.time_to_event(ev).total_seconds()
-        logger.info("{} seconds to event {}".format(ret_val, ev))
-        return ret_val
+        target_date = self.date_library.get_date(ev)
+        target_time = datetime.datetime.combine(target_date,  _WAKE_UP_TIME)
+        delta = target_time - datetime.datetime.today()
+        seconds = delta.total_seconds()
+        logger.info("{} seconds to event {}".format(seconds, ev))
+        return seconds
 
-    def days_to_event(self, ev):
-        ret_val = self.time_to_event(ev).days
-        logger.info("{} days to event {}".format(ret_val, ev))
-        return ret_val
+    def sleeps_to_event(self, ev):
+        sleeps = ceil(self.seconds_to_event(ev) / _SECONDS_PER_DAY)
+        logger.info("{} sleeps to event {}".format(sleeps, ev))
+        return sleeps
 
     @property
     def next_event(self):
-        deltas = {ev: self.days_to_event(ev) for ev in self.date_library.events}
+        deltas = \
+            {ev: self.seconds_to_event(ev) for ev in self.date_library.events}
         next_event = min(deltas, key=deltas.get)
         logger.info("Next event is {}".format(next_event))
         return next_event
 
+    @property
+    def sleeps_to_next_event(self):
+        return self.sleeps_to_event(self.next_event)
+    
     @property
     def special_day_today(self):
         special = self.todays_event is not None
@@ -43,28 +56,17 @@ class Calendar:
 
     @property
     def todays_event(self):
-        event = None
-        if self.days_to_next_event == 0:
-            event = self.next_event
-        logger.info("Todays event is {}".format(event))
-        return event
+        if self.is_nighttime:
+            return None
+        return self.date_library.get_event(datetime.datetime.today().date())
 
     @property
     def seconds_to_next_event(self):
-        ret_val = self.seconds_to_event(self.next_event)
-        logger.info("{} seconds to next event".format(ret_val))
-        return ret_val
+        seconds = self.seconds_to_event(self.next_event)
+        logger.info("{} seconds to next event".format(seconds))
+        return seconds
 
     @property
-    def days_to_next_event(self):
-        ret_val = self.days_to_event(self.next_event)
-        logger.info("{} days to next event".format(ret_val))
-        return ret_val
-
-    @property
-    def daytime(self):
-        pass
-    
-    @property
-    def nighttime(self):
-        return not self.daytime
+    def is_nighttime(self):
+        now = datetime.datetime.now().time()
+        return now > _BEDTIME or now < _WAKE_UP_TIME
