@@ -1,8 +1,9 @@
 import datetime
 import logging
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, call
 
+from linearstage.config import STAGE_CONFIG
 from sleepcounter.controller import Controller
 from sleepcounter.time.calendar import Calendar, _WAKE_UP_TIME
 from sleepcounter.time.datelibrary import DateLibrary
@@ -15,7 +16,7 @@ mock_led.matrix = Mock(return_value=mock_matrix)
 sys.modules['RPi.GPIO'] = Mock()
 sys.modules['max7219.led'] = mock_led
 from sleepcounter.widget.display import LedMatrixWidget
-from sleepcounter.widget.stage import LinearStageWidget, MAX_STAGE_LIMIT
+from sleepcounter.widget.stage import LinearStageWidget
 ################################################################################
 
 logging.basicConfig(
@@ -31,7 +32,7 @@ CALENDAR = Calendar(DateLibrary(
         'New Years Day': NEW_YEARS_DAY,
     }
 ))
-
+MAX_STAGE_LIMIT = STAGE_CONFIG['max_limit']
 
 def mock_datetime(target):
 
@@ -57,11 +58,9 @@ class ControllerIntegration(unittest.TestCase):
         mock_led.reset_mock()
         mock_matrix.reset_mock()
         self.controller = Controller(CALENDAR)
-        self.stage = LinearStageWidget(
-                motor=Mock(),
-                end_stop=Mock()
-            )
-        self.controller.register_widget(self.stage)
+        self.linearstage = Mock(_max=MAX_STAGE_LIMIT)
+        self.stage_widget = LinearStageWidget(stage=self.linearstage)
+        self.controller.register_widget(self.stage_widget)
         self.display = LedMatrixWidget()
         self.controller.register_widget(self.display)
 
@@ -74,7 +73,8 @@ class ControllerIntegration(unittest.TestCase):
             minute=10)
         with mock_datetime(target=today):
             self.controller.update_widgets()
-        self.assertEqual(0, self.stage.position)
+        import pdb; pdb.set_trace()
+        self.linearstage.assert_has_calls([call.home()])
         deadline = datetime.datetime.combine(CHRISTMAS_DAY, _WAKE_UP_TIME)
         time_to_event = deadline - today
         time_elapsed = datetime.timedelta(days=1)
@@ -83,7 +83,7 @@ class ControllerIntegration(unittest.TestCase):
             self.controller.update_widgets()
         expected_position = \
             int(time_elapsed / time_to_event * MAX_STAGE_LIMIT)
-        self.assertEqual(expected_position, self.stage.position)
+        self.assertEqual(expected_position, self.stage_widget.stage.position)
 
     def test_led_matrix_updates_display(self):
         today = datetime.datetime(

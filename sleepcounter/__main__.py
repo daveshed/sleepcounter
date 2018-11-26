@@ -3,22 +3,12 @@ import logging
 from sys import stdout
 from time import sleep
 
-from linearstage.config import (
-    COIL_A1_PIN,
-    COIL_A2_PIN,
-    COIL_B1_PIN,
-    COIL_B2_PIN,
-    END_STOP_PIN,
-    MIN_STAGE_LIMIT,
-    MAX_STAGE_LIMIT,
-    SEQUENCE,
-)
-from linearstage.endstop import EndStop
-from linearstage.motor import Motor
+from linearstage.config import STAGE_CONFIG
 from sleepcounter.controller import Controller
 from sleepcounter.time.calendar import Calendar
 from sleepcounter.time.datelibrary import DateLibrary
 from sleepcounter.widget.display import LedMatrixWidget
+from linearstage.stage import Stage
 from sleepcounter.widget.stage import LinearStageWidget
 
 logging.basicConfig(
@@ -34,16 +24,8 @@ calendar = Calendar(DateLibrary(
 ))
 controller = Controller(calendar)
 controller.register_widget(LedMatrixWidget())
-endstop = EndStop(END_STOP_PIN)
-motor = Motor(
-    pins=[
-        COIL_A1_PIN,
-        COIL_A2_PIN,
-        COIL_B1_PIN,
-        COIL_B2_PIN,
-    ],
-    sequence=SEQUENCE)
-controller.register_widget(LinearStageWidget(motor, endstop))
+controller.register_widget(
+    LinearStageWidget(Stage.from_config(STAGE_CONFIG)))
 
 while True:
     controller.update_widgets()
