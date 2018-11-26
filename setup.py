@@ -3,5 +3,8 @@ setup(
     name="sleepcounter",
     version="0.0.1",
     packages=find_packages(),
-    install_requires=['linearstage==0.0.0'],
+    install_requires=[
+        'linearstage==0.0.0',
+        'max7219'
+        ],
 )
