@@ -38,8 +38,11 @@ class Calendar:
 
     @property
     def next_event(self):
+        # filter out events in the past
         deltas = \
-            {ev: self.seconds_to_event(ev) for ev in self.date_library.events}
+            {ev: self.seconds_to_event(ev) for ev in self.date_library.events 
+                if self.seconds_to_event(ev) > 0}
+        # get the event with the smallest positive delta
         next_event = min(deltas, key=deltas.get)
         logger.info("Next event is {}".format(next_event))
         return next_event
@@ -57,8 +60,13 @@ class Calendar:
     @property
     def todays_event(self):
         if self.is_nighttime:
-            return None
-        return self.date_library.get_event(datetime.datetime.today().date())
+            result = None
+            logger.info("It's nighttime. Wait till morning.")
+        else:
+            todays_date = datetime.datetime.today().date()
+            result = self.date_library.get_event(todays_date)
+            logger.info("Today is %s. The event is %s", todays_date, result)
+        return result
 
     @property
     def seconds_to_next_event(self):

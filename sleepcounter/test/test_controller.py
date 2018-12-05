@@ -6,7 +6,7 @@ from sleepcounter.controller import Controller
 from sleepcounter.time.calendar import Calendar
 
 
-class ControllerIntegrationTests(unittest.TestCase):
+class ControllerBasicTests(unittest.TestCase):
 
     def setUp(self):
         self.controller = Controller(Calendar(date_library=Mock()))
