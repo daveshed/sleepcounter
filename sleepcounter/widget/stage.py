@@ -1,5 +1,5 @@
-import logging
 import json
+import logging
 
 from linearstage.stage import Stage
 from sleepcounter.widget.base import BaseWidget
@@ -23,16 +23,11 @@ class RecoveryData:
         else:
             self._file = file
         LOGGER.info("instantiating {} with file".format(self, self._file))
-        try:
-            self.recover()
-        except FileNotFoundError:
-            LOGGER.warning("No recovery data. Creating a new file")
-            self.record("")
 
     def record(self, data):
         with open(self._file, 'w') as fp:
             serialised = json.dumps(data)
-            LOGGER.info("Writing %s to file", serialised)
+            LOGGER.info("Writing %s to file %s", serialised, self._file)
             fp.write(serialised)
 
     def recover(self):
@@ -51,7 +46,7 @@ class RecoveryData:
             return contents
 
 
-class LinearStageWidget(BaseWidget):
+class StageWidgetBase(BaseWidget):
     """
     Represents the date using a linear translation stage. The stage moves along
     as the date nears an important event.
@@ -61,12 +56,14 @@ class LinearStageWidget(BaseWidget):
         self._persistent_data = RecoveryData(recovery_file)
         recovered = self._persistent_data.recover()
         if recovered is None:
-            self._total_seconds = None # call reset
+            self._total_time = None
+            self._next_event = None
         else:
-            self._total_seconds, self._next_event = recovered
+            self._total_time, self._next_event = recovered
             LOGGER.info(
-                "Counting %r seconds to event %s in total",
-                self._total_seconds,
+                "Counting %r %s to event %s in total",
+                self._total_time,
+                self.units,
                 self._next_event)
         self.stage = stage
         self.stage.home()
@@ -80,21 +77,38 @@ class LinearStageWidget(BaseWidget):
         LOGGER.info(
             "Updating with calendar {}".format(calendar))
         if calendar.special_day_today:
-            LOGGER.info("Today is a special day. Moving stage to max position")
-            self._total_seconds = None
+            LOGGER.info("Today is a special day. Moving stage to end position")
+            self._total_time = None
             self.stage.end()
         else:
-            if (self._total_seconds is None
+            if (self._total_time is None
                     or calendar.next_event != self._next_event):
                 LOGGER.info("Setting initial time. Homing stage")
                 self._next_event = calendar.next_event
-                self._total_seconds = calendar.seconds_to_next_event
+                self._total_time = self._get_time_to_next_event(calendar)
                 self.stage.home()
-                self._persistent_data.record((self._total_seconds, self._next_event,))
+                self._persistent_data.record(
+                    (self._total_time, self._next_event,))
             else:
-                seconds_done = \
-                    (self._total_seconds - calendar.seconds_to_next_event)
-                pos = int(seconds_done / self._total_seconds * self.stage.max)
-                LOGGER.info("{} sec to next event. Updating position to {}"
-                    .format(calendar.seconds_to_next_event, pos))
+                time_done = \
+                    (self._total_time - self._get_time_to_next_event(calendar))
+                pos = int(time_done / self._total_time * self.stage.max)
+                LOGGER.info("%r %s to next event. Updating position to %d",
+                    self._get_time_to_next_event(calendar), self.units, pos,)
                 self.stage.position = pos
+
+
+class SecondsStageWidget(StageWidgetBase):
+    units = "seconds"
+
+    @staticmethod
+    def _get_time_to_next_event(calendar):
+        return calendar.seconds_to_next_event
+
+
+class SleepsStageWidget(StageWidgetBase):
+    units = "sleeps"
+
+    @staticmethod
+    def _get_time_to_next_event(calendar):
+        return calendar.sleeps_to_next_event

@@ -7,9 +7,13 @@ import unittest
 ################# patch hardware specific modules before import ################
 # This only seems to work in python 3.7
 sys.modules['RPi.GPIO'] = Mock()
-from sleepcounter.widget.stage import LinearStageWidget, DEFAULT_RECOVERY_FILE
+from sleepcounter.widget.stage import (
+    SecondsStageWidget,
+    SleepsStageWidget,
+    DEFAULT_RECOVERY_FILE)
 ################################################################################
-from linearstage.stage import Stage, OutOfRangeError
+
+from sleepcounter.test.utils import MockStage, mock_datetime
 from sleepcounter.time.calendar import Calendar
 from sleepcounter.time.datelibrary import DateLibrary
 
@@ -36,62 +40,12 @@ CALENDAR = Calendar(DateLibrary(
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
-def mock_datetime(target):
-
-    class MockedDatetime(datetime.datetime):
-        @classmethod
-        def now(cls, tz=None):
-            return target.replace(tzinfo=tz)
-
-        @classmethod
-        def utcnow(cls):
-            return target
-
-        @classmethod
-        def today(cls):
-            return target
-
-    return patch.object(datetime, 'datetime', MockedDatetime)
-
-
-class MockStage:
-    MAX_POS = 100
-    MIN_POS = 0
-
-    def __init__(self):
-        self.home()
-
-    def home(self):
-        self._position = __class__.MIN_POS
-
-    def end(self):
-        self._position = self.max
-
-    @property
-    def max(self):
-        return __class__.MAX_POS
-
-    @property
-    def position(self):
-        return self._position
-
-    @position.setter
-    def position(self, request):
-        too_large = request > __class__.MAX_POS
-        too_small = request < __class__.MIN_POS
-        if too_large or too_small:
-            raise OutOfRangeError("Cannot go to position {}"
-                .format(request))
-        self._position = request
-
 
 class TestBase(unittest.TestCase):
 
     def _clean_up_tmp_files(self):
         if os.path.exists(DEFAULT_RECOVERY_FILE):
             os.remove(DEFAULT_RECOVERY_FILE)
-        if hasattr(self, 'recovery_file'):
-            os.remove(self.recovery_file)        
 
     def setUp(self):
         self._clean_up_tmp_files()
@@ -105,7 +59,7 @@ class StageWidgetStoresPerisistentData(TestBase):
             
     def test_reinitialise_to_stored_position(self):
         self.recovery_file = DIR_PATH + '/tmp'
-        stage_widget = LinearStageWidget(
+        stage_widget = SecondsStageWidget(
             stage=self.mock_stage,
             recovery_file=self.recovery_file)
         today = JUST_BEFORE_XMAS
@@ -118,7 +72,7 @@ class StageWidgetStoresPerisistentData(TestBase):
         pos_before = self.mock_stage.position
         # system goes down which resets the stage, widget is reinitialised
         self.mock_stage = MockStage()
-        stage_widget = LinearStageWidget(
+        stage_widget = SecondsStageWidget(
             stage=self.mock_stage,
             recovery_file=self.recovery_file)
         with mock_datetime(target=today):
@@ -129,7 +83,7 @@ class StageWidgetStoresPerisistentData(TestBase):
         self.assertEqual(pos_after, pos_before)
 
     def test_reinitialise_to_stored_position_default_file(self):
-        stage_widget = LinearStageWidget(self.mock_stage)
+        stage_widget = SecondsStageWidget(self.mock_stage)
         today = JUST_BEFORE_XMAS
         with mock_datetime(target=today):
             stage_widget.update(CALENDAR)
@@ -140,7 +94,7 @@ class StageWidgetStoresPerisistentData(TestBase):
         pos_before = self.mock_stage.position
         # system goes down which resets the stage, widget is reinitialised
         self.mock_stage = MockStage()
-        stage_widget = LinearStageWidget(
+        stage_widget = SecondsStageWidget(
             stage=self.mock_stage)
         with mock_datetime(target=today):
             stage_widget.update(CALENDAR)
@@ -150,7 +104,7 @@ class StageWidgetStoresPerisistentData(TestBase):
         self.assertEqual(pos_after, pos_before)
 
     def test_reinitialised_after_event_should_reset(self):
-        stage_widget = LinearStageWidget(self.mock_stage)
+        stage_widget = SecondsStageWidget(self.mock_stage)
         today = JUST_BEFORE_XMAS
         with mock_datetime(target=today):
             stage_widget.update(CALENDAR)
@@ -160,7 +114,7 @@ class StageWidgetStoresPerisistentData(TestBase):
         pos_before = self.mock_stage.position
         # system goes down which resets the stage, widget is reinitialised
         self.mock_stage = MockStage()
-        stage_widget = LinearStageWidget(
+        stage_widget = SecondsStageWidget(
             stage=self.mock_stage)
         # system is brought back up after an event so should restart counting
         today = CHRISTMAS_DAY + datetime.timedelta(days=1)
@@ -173,7 +127,7 @@ class StageWidgetStoresPerisistentData(TestBase):
 class StageWidgetDisplaysTime(TestBase):
     
     def test_stage_at_end_on_special_day(self):
-        stage_widget = LinearStageWidget(self.mock_stage)
+        stage_widget = SecondsStageWidget(self.mock_stage)
         today = JUST_BEFORE_XMAS
         with mock_datetime(target=today):
             stage_widget.update(CALENDAR)
@@ -190,3 +144,88 @@ class StageWidgetDisplaysTime(TestBase):
         with mock_datetime(target=today):
             stage_widget.update(CALENDAR)
         self.assertEqual(MockStage.MAX_POS, self.mock_stage.position)
+
+
+class SleepsStageWidgetDisplaysTime(TestBase):
+
+    def test_stage_at_end_on_special_day(self):
+        stage_widget = SleepsStageWidget(self.mock_stage)
+        today = JUST_BEFORE_XMAS
+        with mock_datetime(target=today):
+            stage_widget.update(CALENDAR)
+        today += datetime.timedelta(days=1)
+        with mock_datetime(target=today):
+            stage_widget.update(CALENDAR)
+        today = datetime.datetime(
+            year=2018,
+            month=12,
+            day=25,
+            hour=8,
+            minute=12,
+        )
+        with mock_datetime(target=today):
+            stage_widget.update(CALENDAR)
+        self.assertEqual(MockStage.MAX_POS, self.mock_stage.position)
+        # a bit more timme passes but the widget should not move
+        today = datetime.datetime(
+            year=2018,
+            month=12,
+            day=25,
+            hour=10,
+            minute=7,
+        )
+        with mock_datetime(target=today):
+            stage_widget.update(CALENDAR)
+        self.assertEqual(MockStage.MAX_POS, self.mock_stage.position)
+
+    def test_stage_homed_after_special_day(self):
+        stage_widget = SleepsStageWidget(self.mock_stage)
+        today = JUST_BEFORE_XMAS
+        with mock_datetime(target=today):
+            stage_widget.update(CALENDAR)
+        xmas_day = datetime.datetime(
+            year=2018,
+            month=12,
+            day=25,
+            hour=8,
+            minute=12,
+        )
+        with mock_datetime(target=xmas_day):
+            stage_widget.update(CALENDAR)
+        today = xmas_day + datetime.timedelta(days=1)
+        with mock_datetime(target=today):
+            stage_widget.update(CALENDAR)
+        self.assertEqual(MockStage.MIN_POS, self.mock_stage.position)
+
+    def test_stage_moves_forward_after_sleep(self):
+        stage_widget = SleepsStageWidget(self.mock_stage)
+        just_before_bedtime = datetime.datetime(
+            year=2018,
+            month=12,
+            day=3,
+            hour=18,
+            minute=5)
+        with mock_datetime(target=just_before_bedtime):
+            stage_widget.update(CALENDAR)
+        # stage should be homed initially
+        self.assertEqual(MockStage.MIN_POS, self.mock_stage.position)
+        just_after_bedtime = datetime.datetime(
+            year=2018,
+            month=12,
+            day=3,
+            hour=21,
+            minute=19)
+        # stage should not move yet.
+        with mock_datetime(target=just_after_bedtime):
+            stage_widget.update(CALENDAR)
+        self.assertEqual(MockStage.MIN_POS, self.mock_stage.position)
+        wake_up_time = datetime.datetime(
+            year=2018,
+            month=12,
+            day=4,
+            hour=8,
+            minute=1)
+        # stage should have moved now.
+        with mock_datetime(target=wake_up_time):
+            stage_widget.update(CALENDAR)
+        self.assertGreater(self.mock_stage.position, MockStage.MIN_POS)

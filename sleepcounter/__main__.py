@@ -9,7 +9,7 @@ from sleepcounter.time.calendar import Calendar
 from sleepcounter.time.datelibrary import DateLibrary
 from sleepcounter.widget.display import LedMatrixWidget
 from linearstage.stage import Stage
-from sleepcounter.widget.stage import LinearStageWidget
+from sleepcounter.widget.stage import SleepsStageWidget
 
 logging.basicConfig(
     format='%(asctime)s[%(name)s]:%(levelname)s:%(message)s',
@@ -25,7 +25,7 @@ calendar = Calendar(DateLibrary(
 controller = Controller(calendar)
 controller.register_widget(LedMatrixWidget())
 controller.register_widget(
-    LinearStageWidget(Stage.from_config(STAGE_CONFIG)))
+    SleepsStageWidget(Stage.from_config(STAGE_CONFIG)))
 
 while True:
     controller.update_widgets()

@@ -28,7 +28,6 @@ class Calendar:
         target_time = datetime.datetime.combine(target_date,  _WAKE_UP_TIME)
         delta = target_time - datetime.datetime.today()
         seconds = delta.total_seconds()
-        logger.info("{} seconds to event {}".format(seconds, ev))
         return seconds
 
     def sleeps_to_event(self, ev):

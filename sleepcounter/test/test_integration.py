@@ -1,5 +1,6 @@
 import datetime
 import logging
+import os
 import unittest
 from unittest.mock import Mock, patch, call
 
@@ -15,9 +16,13 @@ mock_led.matrix = Mock(return_value=mock_matrix)
 # This only seems to work in python 3.7
 sys.modules['RPi.GPIO'] = Mock()
 sys.modules['max7219.led'] = mock_led
-from sleepcounter.widget.display import LedMatrixWidget
-from sleepcounter.widget.stage import LinearStageWidget
 ################################################################################
+from sleepcounter.test.utils import MockStage, mock_datetime
+from sleepcounter.widget.display import LedMatrixWidget
+from sleepcounter.widget.stage import (
+    SecondsStageWidget,
+    SleepsStageWidget,
+    DEFAULT_RECOVERY_FILE)
 
 logging.basicConfig(
     format='%(asctime)s[%(name)s]:%(levelname)s:%(message)s',
@@ -34,32 +39,29 @@ CALENDAR = Calendar(DateLibrary(
 ))
 MAX_STAGE_LIMIT = STAGE_CONFIG['max_limit']
 
-def mock_datetime(target):
 
-    class MockedDatetime(datetime.datetime):
-        @classmethod
-        def now(cls, tz=None):
-            return target.replace(tzinfo=tz)
+class TestBase(unittest.TestCase):
 
-        @classmethod
-        def utcnow(cls):
-            return target
+    def _clean_up_tmp_files(self):
+        if os.path.exists(DEFAULT_RECOVERY_FILE):
+            os.remove(DEFAULT_RECOVERY_FILE)
 
-        @classmethod
-        def today(cls):
-            return target
+    def setUp(self):
+        self._clean_up_tmp_files()
+        self.mock_stage = MockStage()
 
-    return patch.object(datetime, 'datetime', MockedDatetime)
+    def tearDown(self):
+        self._clean_up_tmp_files()
 
 
-class ControllerIntegration(unittest.TestCase):
+class IntegrationSecondCounterWithDisplay(TestBase):
 
     def setUp(self):
         mock_led.reset_mock()
         mock_matrix.reset_mock()
         self.controller = Controller(CALENDAR)
-        self.linearstage = Mock(_max=MAX_STAGE_LIMIT)
-        self.stage_widget = LinearStageWidget(stage=self.linearstage)
+        self.linearstage = MockStage()
+        self.stage_widget = SecondsStageWidget(stage=self.linearstage)
         self.controller.register_widget(self.stage_widget)
         self.display = LedMatrixWidget()
         self.controller.register_widget(self.display)
@@ -73,8 +75,7 @@ class ControllerIntegration(unittest.TestCase):
             minute=10)
         with mock_datetime(target=today):
             self.controller.update_widgets()
-        import pdb; pdb.set_trace()
-        self.linearstage.assert_has_calls([call.home()])
+        self.assertEqual(MockStage.MIN_POS, self.linearstage.position)
         deadline = datetime.datetime.combine(CHRISTMAS_DAY, _WAKE_UP_TIME)
         time_to_event = deadline - today
         time_elapsed = datetime.timedelta(days=1)
@@ -82,7 +83,7 @@ class ControllerIntegration(unittest.TestCase):
         with mock_datetime(target=tomorrow):
             self.controller.update_widgets()
         expected_position = \
-            int(time_elapsed / time_to_event * MAX_STAGE_LIMIT)
+            int(time_elapsed / time_to_event * MockStage.MAX_POS)
         self.assertEqual(expected_position, self.stage_widget.stage.position)
 
     def test_led_matrix_updates_display(self):
@@ -96,4 +97,49 @@ class ControllerIntegration(unittest.TestCase):
         with mock_datetime(target=today):
             self.controller.update_widgets()
         mock_matrix.show_message.assert_called_with(str(expected_sleeps))
-        
+
+
+class IntegrationSleepsCounterWithDisplay(TestBase):
+
+    def setUp(self):
+        mock_led.reset_mock()
+        mock_matrix.reset_mock()
+        self.controller = Controller(CALENDAR)
+        self.linearstage = MockStage()
+        self.stage_widget = SleepsStageWidget(stage=self.linearstage)
+        self.controller.register_widget(self.stage_widget)
+        self.display = LedMatrixWidget()
+        self.controller.register_widget(self.display)
+
+    def test_linear_stage_updates_position(self):
+        reset_time = datetime.datetime(
+            year=2018,
+            month=12,
+            day=23,
+            hour=12,
+            minute=10)
+        with mock_datetime(target=reset_time):
+            self.controller.update_widgets()
+        # stage should reset and move to minimum position
+        self.assertEqual(MockStage.MIN_POS, self.linearstage.position)
+        expected_sleeps = 2
+        # another sleep elapses
+        sleeps_elapsed = 1
+        tomorrow = reset_time + datetime.timedelta(days=1)
+        with mock_datetime(target=tomorrow):
+            self.controller.update_widgets()
+        expected_position = \
+            int(sleeps_elapsed / expected_sleeps * MockStage.MAX_POS)
+        self.assertEqual(expected_position, self.stage_widget.stage.position)
+
+    def test_led_matrix_updates_display(self):
+        today = datetime.datetime(
+            year=2018,
+            month=12,
+            day=23,
+            hour=12,
+            minute=10)
+        expected_sleeps = 2
+        with mock_datetime(target=today):
+            self.controller.update_widgets()
+        mock_matrix.show_message.assert_called_with(str(expected_sleeps))
