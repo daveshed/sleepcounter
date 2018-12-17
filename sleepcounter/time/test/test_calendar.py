@@ -4,28 +4,12 @@ import unittest
 
 from sleepcounter.time.calendar import Calendar
 from sleepcounter.time.datelibrary import DateLibrary
+from sleepcounter.test.utils import mock_datetime
 
 # TODO: same date every year
 BONFIRE_NIGHT = datetime.date(2018, 11, 5)
 HALLOWEEN = datetime.date(2018, 10, 31)
 CHRISTMAS_DAY = datetime.date(2018, 12, 25)
-
-def mock_datetime(target):
-
-    class MockedDatetime(datetime.datetime):
-        @classmethod
-        def now(cls, tz=None):
-            return target.replace(tzinfo=tz)
-
-        @classmethod
-        def utcnow(cls):
-            return target
-
-        @classmethod
-        def today(cls):
-            return target
-
-    return mock.patch.object(datetime, 'datetime', MockedDatetime)
 
 
 class CalendarDateKeeping(unittest.TestCase):

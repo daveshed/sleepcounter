@@ -48,7 +48,12 @@ class TestBase(unittest.TestCase):
 
     def setUp(self):
         self._clean_up_tmp_files()
-        self.mock_stage = MockStage()
+        mock_led.reset_mock()
+        mock_matrix.reset_mock()
+        self.controller = Controller(CALENDAR)
+        self.linearstage = MockStage()
+        self.display = LedMatrixWidget()
+        self.controller.register_widget(self.display)
 
     def tearDown(self):
         self._clean_up_tmp_files()
@@ -57,14 +62,9 @@ class TestBase(unittest.TestCase):
 class IntegrationSecondCounterWithDisplay(TestBase):
 
     def setUp(self):
-        mock_led.reset_mock()
-        mock_matrix.reset_mock()
-        self.controller = Controller(CALENDAR)
-        self.linearstage = MockStage()
-        self.stage_widget = SecondsStageWidget(stage=self.linearstage)
-        self.controller.register_widget(self.stage_widget)
-        self.display = LedMatrixWidget()
-        self.controller.register_widget(self.display)
+        super().setUp()
+        self.controller.register_widget(
+            SecondsStageWidget(stage=self.linearstage))
 
     def test_linear_stage_updates_position(self):
         today = datetime.datetime(
@@ -84,7 +84,7 @@ class IntegrationSecondCounterWithDisplay(TestBase):
             self.controller.update_widgets()
         expected_position = \
             int(time_elapsed / time_to_event * MockStage.MAX_POS)
-        self.assertEqual(expected_position, self.stage_widget.stage.position)
+        self.assertEqual(expected_position, self.linearstage.position)
 
     def test_led_matrix_updates_display(self):
         today = datetime.datetime(
@@ -102,14 +102,9 @@ class IntegrationSecondCounterWithDisplay(TestBase):
 class IntegrationSleepsCounterWithDisplay(TestBase):
 
     def setUp(self):
-        mock_led.reset_mock()
-        mock_matrix.reset_mock()
-        self.controller = Controller(CALENDAR)
-        self.linearstage = MockStage()
-        self.stage_widget = SleepsStageWidget(stage=self.linearstage)
-        self.controller.register_widget(self.stage_widget)
-        self.display = LedMatrixWidget()
-        self.controller.register_widget(self.display)
+        super().setUp()
+        self.controller.register_widget(
+            SleepsStageWidget(stage=self.linearstage))
 
     def test_linear_stage_updates_position(self):
         reset_time = datetime.datetime(
@@ -130,7 +125,7 @@ class IntegrationSleepsCounterWithDisplay(TestBase):
             self.controller.update_widgets()
         expected_position = \
             int(sleeps_elapsed / expected_sleeps * MockStage.MAX_POS)
-        self.assertEqual(expected_position, self.stage_widget.stage.position)
+        self.assertEqual(expected_position, self.linearstage.position)
 
     def test_led_matrix_updates_display(self):
         today = datetime.datetime(
