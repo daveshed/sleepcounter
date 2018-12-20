@@ -4,7 +4,7 @@ import unittest
 
 from sleepcounter.time.calendar import Calendar
 from sleepcounter.time.datelibrary import DateLibrary
-from sleepcounter.test.utils import mock_datetime
+from sleepcounter.mocks.datetime import mock_datetime
 
 # TODO: same date every year
 BONFIRE_NIGHT = datetime.date(2018, 11, 5)

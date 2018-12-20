@@ -10,14 +10,12 @@ from sleepcounter.time.calendar import Calendar, _WAKE_UP_TIME
 from sleepcounter.time.datelibrary import DateLibrary
 ################# patch hardware specific modules before import ################
 import sys
-mock_led = Mock()
-mock_matrix = Mock()
-mock_led.matrix = Mock(return_value=mock_matrix)
 # This only seems to work in python 3.7
 sys.modules['RPi.GPIO'] = Mock()
-sys.modules['max7219.led'] = mock_led
+sys.modules['max7219.led'] = Mock()
 ################################################################################
-from sleepcounter.test.utils import MockStage, mock_datetime
+from sleepcounter.mocks.stage import MockStage
+from sleepcounter.mocks.datetime import mock_datetime
 from sleepcounter.widget.display import LedMatrixWidget
 from sleepcounter.widget.stage import (
     SecondsStageWidget,
@@ -33,8 +31,8 @@ CHRISTMAS_DAY = datetime.datetime(2018, 12, 25)
 NEW_YEARS_DAY = datetime.datetime(2019, 1, 1)
 CALENDAR = Calendar(DateLibrary(
     {
-        'Christmas': CHRISTMAS_DAY,
-        'New Years Day': NEW_YEARS_DAY,
+        'Christmas': CHRISTMAS_DAY.date(),
+        'New Years Day': NEW_YEARS_DAY.date(),
     }
 ))
 MAX_STAGE_LIMIT = STAGE_CONFIG['max_limit']
@@ -48,11 +46,10 @@ class TestBase(unittest.TestCase):
 
     def setUp(self):
         self._clean_up_tmp_files()
-        mock_led.reset_mock()
-        mock_matrix.reset_mock()
+        self.mock_matrix = Mock()
         self.controller = Controller(CALENDAR)
         self.linearstage = MockStage()
-        self.display = LedMatrixWidget()
+        self.display = LedMatrixWidget(self.mock_matrix)
         self.controller.register_widget(self.display)
 
     def tearDown(self):
@@ -96,7 +93,7 @@ class IntegrationSecondCounterWithDisplay(TestBase):
         expected_sleeps = 2
         with mock_datetime(target=today):
             self.controller.update_widgets()
-        mock_matrix.show_message.assert_called_with(str(expected_sleeps))
+        self.mock_matrix.show_message.assert_called_with(str(expected_sleeps))
 
 
 class IntegrationSleepsCounterWithDisplay(TestBase):
@@ -137,4 +134,4 @@ class IntegrationSleepsCounterWithDisplay(TestBase):
         expected_sleeps = 2
         with mock_datetime(target=today):
             self.controller.update_widgets()
-        mock_matrix.show_message.assert_called_with(str(expected_sleeps))
+        self.mock_matrix.show_message.assert_called_with(str(expected_sleeps))

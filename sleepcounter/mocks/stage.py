@@ -1,25 +1,4 @@
-import datetime
-from unittest.mock import patch
-
 from linearstage.stage import OutOfRangeError
-
-
-def mock_datetime(target):
-
-    class MockedDatetime(datetime.datetime):
-        @classmethod
-        def now(cls, tz=None):
-            return target.replace(tzinfo=tz)
-
-        @classmethod
-        def utcnow(cls):
-            return target
-
-        @classmethod
-        def today(cls):
-            return target
-
-    return patch.object(datetime, 'datetime', MockedDatetime)
 
 
 class MockStage:

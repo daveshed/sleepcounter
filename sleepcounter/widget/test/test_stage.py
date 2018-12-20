@@ -13,7 +13,8 @@ from sleepcounter.widget.stage import (
     DEFAULT_RECOVERY_FILE)
 ################################################################################
 
-from sleepcounter.test.utils import MockStage, mock_datetime
+from sleepcounter.mocks.datetime import mock_datetime
+from sleepcounter.mocks.stage import MockStage
 from sleepcounter.time.calendar import Calendar
 from sleepcounter.time.datelibrary import DateLibrary
 
