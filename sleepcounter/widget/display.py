@@ -45,8 +45,9 @@ class LedMatrixWidget(BaseWidget):
     
     def _handle_regular_day(self, calendar):
         sleeps = calendar.sleeps_to_next_event
-        msg = "{} in {} sleeps".format(
-            calendar.next_event, sleeps)
+        unit = 'sleeps' if sleeps > 1 else 'sleep'
+        msg = "{} in {} {}".format(
+            calendar.next_event, sleeps, unit)
         LOGGER.info(
             "Updating with calendar {}. Setting message to {}"
             .format(calendar, msg))
