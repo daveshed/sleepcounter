@@ -52,6 +52,22 @@ class DisplayUpdateTests(TestBase):
         with mock_datetime(target=today):
             self.display.update(CALENDAR)
         self.mock_matrix.show_message.assert_called_with(str(expected_sleeps))
+        self.assertTrue(call('Christmas in {} sleeps'.format(expected_sleeps))
+            in self.mock_matrix.show_message.call_args_list)
+
+    def test_display_shows_one_sleep(self):
+        today = datetime.datetime(
+            year=2018,
+            month=12,
+            day=24,
+            hour=12,
+            minute=10)
+        expected_sleeps = 1
+        with mock_datetime(target=today):
+            self.display.update(CALENDAR)
+        self.mock_matrix.show_message.assert_called_with(str(expected_sleeps))
+        self.assertTrue(call('Christmas in 1 sleep') in 
+            self.mock_matrix.show_message.call_args_list)
 
     def test_display_shows_special_day(self):
         today = datetime.datetime(
