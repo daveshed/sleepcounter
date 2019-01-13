@@ -1,16 +1,12 @@
 import datetime
 import logging
 import os
+import sys
 import unittest
 from unittest.mock import Mock, patch, call
 
 from sleepcounter.time.calendar import Calendar, _WAKE_UP_TIME
 from sleepcounter.time.datelibrary import DateLibrary
-################# patch hardware specific modules before import ################
-import sys
-# # This only seems to work in python 3.7
-sys.modules['max7219.led'] = Mock()
-################################################################################
 from sleepcounter.mocks.datetime import mock_datetime
 from sleepcounter.widget.display import LedMatrixWidget
 
