@@ -1,3 +1,4 @@
+"""The max7219 display instance is created here as DISPLAY"""
 from luma.core.interface.serial import spi, noop
 from luma.led_matrix.device import max7219
 

@@ -1,25 +1,28 @@
+"""
+Main entry-point module for the sleepcounter. All instances are created here
+and the application is started.
+"""
 from datetime import datetime
 import logging
 from sys import stdout
 from time import sleep
 
 from linearstage.config import STAGE_CONFIG
+from linearstage.stage import Stage
 from sleepcounter.controller import Controller
+from sleepcounter.display.display import LedMatrix
+from sleepcounter.display.factory import DISPLAY
 from sleepcounter.time.calendar import Calendar
 from sleepcounter.time.datelibrary import DateLibrary
 from sleepcounter.widget.display import LedMatrixWidget
-from linearstage.stage import Stage
 from sleepcounter.widget.stage import SleepsStageWidget
-
-from sleepcounter.display.factory import DISPLAY
-from sleepcounter.display.display import LedMatrix
 
 logging.basicConfig(
     format='%(asctime)s[%(name)s]:%(levelname)s:%(message)s',
     stream=stdout,
     level=logging.INFO)
 
-calendar = Calendar(DateLibrary(
+CALENDAR = Calendar(DateLibrary(
     {
         'Christmas': datetime(2018, 12, 25).date(),
         'New Years Day': datetime(2019, 1, 1).date(),
@@ -28,12 +31,12 @@ calendar = Calendar(DateLibrary(
         'Totty\'s Birthday': datetime(2019, 2, 14).date(),
     }
 ))
-controller = Controller(calendar)
-controller.register_widget(
+CONTROLLER = Controller(CALENDAR)
+CONTROLLER.register_widget(
     LedMatrixWidget(LedMatrix(DISPLAY)))
-controller.register_widget(
+CONTROLLER.register_widget(
     SleepsStageWidget(Stage.from_config(STAGE_CONFIG)))
 
 while True:
-    controller.update_widgets()
+    CONTROLLER.update_widgets()
     sleep(10)
