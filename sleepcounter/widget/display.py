@@ -29,22 +29,18 @@ class LedMatrixWidget(BaseWidget):
             self._handle_regular_day(calendar)
 
     def _handle_special_day(self, calendar):
-        msg = "It's {}!".format(calendar.todays_event)
+        msg = "It's {}!".format(calendar.todays_event.name)
         LOGGER.info(
             "Updating with calendar %s. Setting message to %s", calendar, msg)
         self.display.show_message(msg)
 
     def _handle_regular_day(self, calendar):
-        # show all events in the calendar
-        for event in calendar.date_library.events:
+        for event in calendar.events:
             sleeps = calendar.sleeps_to_event(event)
-            if sleeps < 0:
-                # ignore events in the past
-                continue
             unit = 'sleeps' if sleeps > 1 else 'sleep'
             msg = "{} in {} {}".format(
-                event, sleeps, unit)
+                event.name, sleeps, unit)
             LOGGER.info(
-                "Updating with calendar %s. Setting message to %s",
-                calendar, msg)
+                "Updating with calendar %s. Setting message to %s", calendar, msg)
+            self.display.clear()
             self.display.show_message(msg)

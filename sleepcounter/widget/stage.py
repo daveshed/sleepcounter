@@ -1,8 +1,8 @@
 """Implementation for the stage widget that displays the number of seconds or
 sleeps to the next event in therms of the distance from the end of the track"""
 # pylint: disable=invalid-name
-import json
 import logging
+import pickle
 
 from sleepcounter.widget.base import BaseWidget
 
@@ -26,10 +26,9 @@ class RecoveryData:
 
     def record(self, data):
         """serialise the data and save to file"""
-        with open(self._file, 'w') as fp:
-            serialised = json.dumps(data)
-            LOGGER.info("Writing %s to file %s", serialised, self._file)
-            fp.write(serialised)
+        with open(self._file, 'wb') as fp:
+            LOGGER.info("Writing %s to file %s", data, self._file)
+            pickle.dump(data, fp)
 
     def recover(self):
         """recover data from the file"""
@@ -42,8 +41,8 @@ class RecoveryData:
 
     def _read(self):
         LOGGER.info("Getting saved data...")
-        with open(self._file) as fp:
-            contents = json.load(fp)
+        with open(self._file, 'rb') as fp:
+            contents = pickle.load(fp)
             LOGGER.info("Read %r from file", contents)
             return contents
 

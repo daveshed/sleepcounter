@@ -9,7 +9,7 @@ from sleepcounter.time.calendar import Calendar
 class ControllerBasicTests(unittest.TestCase):
 
     def setUp(self):
-        self.controller = Controller(Calendar(date_library=Mock()))
+        self.controller = Controller(Calendar())
         self.mock_widget = Mock()
         self.controller.register_widget(self.mock_widget)
         

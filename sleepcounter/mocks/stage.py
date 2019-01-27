@@ -1,6 +1,9 @@
 """Mock linear stage implementation"""
+import logging
+
 from linearstage.stage import OutOfRangeError
 
+LOGGER = logging.getLogger("mock stage")
 
 class MockStage:
     """A mock implemenation of a stepper motor driven linear stage"""
@@ -13,10 +16,12 @@ class MockStage:
 
     def home(self):
         """Move to home position"""
+        LOGGER.info("Homing stage")
         self._position = __class__.MIN_POS
 
     def end(self):
         """Move to end position"""
+        LOGGER.info("Moving to home position")
         self._position = self.max
 
     @property
@@ -31,6 +36,7 @@ class MockStage:
 
     @position.setter
     def position(self, request):
+        LOGGER.info("Setting position to %s", request)
         too_large = request > __class__.MAX_POS
         too_small = request < __class__.MIN_POS
         if too_large or too_small:

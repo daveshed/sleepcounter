@@ -6,8 +6,9 @@ from unittest.mock import Mock, patch, call
 
 from linearstage.config import STAGE_CONFIG
 from sleepcounter.controller import Controller
-from sleepcounter.time.calendar import Calendar, _WAKE_UP_TIME
-from sleepcounter.time.datelibrary import DateLibrary
+from sleepcounter.time.calendar import Calendar
+from sleepcounter.time.event import SpecialDay
+from sleepcounter.time.bedtime import SleepChecker
 ################# patch hardware specific modules before import ################
 import sys
 # This only seems to work in python 3.7
@@ -27,14 +28,18 @@ logging.basicConfig(
     stream=sys.stdout,
     level=logging.INFO)
 
-CHRISTMAS_DAY = datetime.datetime(2018, 12, 25)
-NEW_YEARS_DAY = datetime.datetime(2019, 1, 1)
-CALENDAR = Calendar(DateLibrary(
-    {
-        'Christmas': CHRISTMAS_DAY.date(),
-        'New Years Day': NEW_YEARS_DAY.date(),
-    }
-))
+BONFIRE_NIGHT = SpecialDay(name='Bonfire Night', month=11, day=5,)
+HALLOWEEN = SpecialDay(name='Halloween', month=10, day=31,)
+CHRISTMAS = SpecialDay(name='Christmas', month=12, day=25,)
+
+def create_calendar():
+    return (
+        Calendar()
+            .add_event(BONFIRE_NIGHT)
+            .add_event(HALLOWEEN)
+            .add_event(CHRISTMAS)
+        )
+
 MAX_STAGE_LIMIT = STAGE_CONFIG['max_limit']
 
 
@@ -47,7 +52,8 @@ class TestBase(unittest.TestCase):
     def setUp(self):
         self._clean_up_tmp_files()
         self.mock_matrix = Mock()
-        self.controller = Controller(CALENDAR)
+        self.calendar = create_calendar()
+        self.controller = Controller(self.calendar)
         self.linearstage = MockStage()
         self.display = LedMatrixWidget(self.mock_matrix)
         self.controller.register_widget(self.display)
@@ -72,8 +78,10 @@ class IntegrationSecondCounterWithDisplay(TestBase):
             minute=10)
         with mock_datetime(target=today):
             self.controller.update_widgets()
+        # stage should home first
         self.assertEqual(MockStage.MIN_POS, self.linearstage.position)
-        deadline = datetime.datetime.combine(CHRISTMAS_DAY, _WAKE_UP_TIME)
+        xmas = datetime.date(year=2018, month=12, day=25)
+        deadline = datetime.datetime.combine(xmas, SleepChecker.WAKE_UP_TIME)
         time_to_event = deadline - today
         time_elapsed = datetime.timedelta(days=1)
         tomorrow = today + time_elapsed
@@ -90,10 +98,10 @@ class IntegrationSecondCounterWithDisplay(TestBase):
             day=23,
             hour=12,
             minute=10)
-        expected_sleeps = 2
         with mock_datetime(target=today):
             self.controller.update_widgets()
-        self.mock_matrix.show_message.assert_called()
+        self.assertTrue(call('Christmas in 2 sleeps') in 
+            self.mock_matrix.show_message.call_args_list)
 
 
 class IntegrationSleepsCounterWithDisplay(TestBase):
@@ -131,7 +139,7 @@ class IntegrationSleepsCounterWithDisplay(TestBase):
             day=23,
             hour=12,
             minute=10)
-        expected_sleeps = 2
         with mock_datetime(target=today):
             self.controller.update_widgets()
-        self.mock_matrix.show_message.assert_called()
+        self.assertTrue(call('Christmas in 2 sleeps') in 
+            self.mock_matrix.show_message.call_args_list)

@@ -5,8 +5,8 @@ import sys
 import unittest
 from unittest.mock import Mock, patch, call
 
-from sleepcounter.time.calendar import Calendar, _WAKE_UP_TIME
-from sleepcounter.time.datelibrary import DateLibrary
+from sleepcounter.time.calendar import Calendar
+from sleepcounter.time.event import SpecialDay
 from sleepcounter.mocks.datetime import mock_datetime
 from sleepcounter.widget.display import LedMatrixWidget
 
@@ -15,14 +15,15 @@ logging.basicConfig(
     stream=sys.stdout,
     level=logging.INFO)
 
-CHRISTMAS_DAY = datetime.datetime(2018, 12, 25)
-NEW_YEARS_DAY = datetime.datetime(2019, 1, 1)
-CALENDAR = Calendar(DateLibrary(
-    {
-        'Christmas': CHRISTMAS_DAY.date(),
-        'New Year\'s Day': NEW_YEARS_DAY.date(),
-    }
-))
+CHRISTMAS_DAY = SpecialDay(name='Christmas', month=12, day=25,)
+NEW_YEARS_DAY = SpecialDay(name="New Year\'s Day", month=1, day=1,)
+
+def create_calendar():
+    return (
+        Calendar()
+            .add_event(CHRISTMAS_DAY)
+            .add_event(NEW_YEARS_DAY)
+        )
 
 
 class TestBase(unittest.TestCase):
@@ -30,6 +31,7 @@ class TestBase(unittest.TestCase):
     def setUp(self):
         self.mock_matrix = Mock()
         self.display = LedMatrixWidget(self.mock_matrix)
+        self.calendar = create_calendar()
 
     def tearDown(self):
         pass
@@ -47,9 +49,8 @@ class DisplayUpdateTests(TestBase):
         expected_sleeps_xmas = 2
         expected_sleeps_new_year = 9
         with mock_datetime(target=today):
-            self.display.update(CALENDAR)
-        self.assertTrue(
-            call('Christmas in {} sleeps'.format(expected_sleeps_xmas))
+            self.display.update(self.calendar)
+        self.assertTrue(call('Christmas in {} sleeps'.format(expected_sleeps_xmas))
             in self.mock_matrix.show_message.call_args_list)
         self.assertTrue(
             call('New Year\'s Day in {} sleeps'.format(expected_sleeps_new_year))
@@ -64,7 +65,7 @@ class DisplayUpdateTests(TestBase):
             minute=10)
         expected_sleeps_new_year = 5
         with mock_datetime(target=today):
-            self.display.update(CALENDAR)
+            self.display.update(self.calendar)
         self.assertTrue(
             call('New Year\'s Day in {} sleeps'.format(expected_sleeps_new_year))
             in self.mock_matrix.show_message.call_args_list)
@@ -80,7 +81,7 @@ class DisplayUpdateTests(TestBase):
             minute=10)
         expected_sleeps = 1
         with mock_datetime(target=today):
-            self.display.update(CALENDAR)
+            self.display.update(self.calendar)
         self.assertTrue(call('Christmas in 1 sleep') in 
             self.mock_matrix.show_message.call_args_list)
 
@@ -92,5 +93,5 @@ class DisplayUpdateTests(TestBase):
             hour=17,
             minute=9)
         with mock_datetime(target=today):
-            self.display.update(CALENDAR)
+            self.display.update(self.calendar)
         self.mock_matrix.show_message.assert_called_with("It's Christmas!")
