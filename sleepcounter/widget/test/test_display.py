@@ -20,7 +20,7 @@ NEW_YEARS_DAY = datetime.datetime(2019, 1, 1)
 CALENDAR = Calendar(DateLibrary(
     {
         'Christmas': CHRISTMAS_DAY.date(),
-        'New Years Day': NEW_YEARS_DAY.date(),
+        'New Year\'s Day': NEW_YEARS_DAY.date(),
     }
 ))
 
@@ -44,12 +44,32 @@ class DisplayUpdateTests(TestBase):
             day=23,
             hour=12,
             minute=10)
-        expected_sleeps = 2
+        expected_sleeps_xmas = 2
+        expected_sleeps_new_year = 9
         with mock_datetime(target=today):
             self.display.update(CALENDAR)
-        self.mock_matrix.show_message.assert_called_with(str(expected_sleeps))
-        self.assertTrue(call('Christmas in {} sleeps'.format(expected_sleeps))
+        self.assertTrue(
+            call('Christmas in {} sleeps'.format(expected_sleeps_xmas))
             in self.mock_matrix.show_message.call_args_list)
+        self.assertTrue(
+            call('New Year\'s Day in {} sleeps'.format(expected_sleeps_new_year))
+            in self.mock_matrix.show_message.call_args_list)
+
+    def test_display_should_not_show_dates_past(self):
+        today = datetime.datetime(
+            year=2018,
+            month=12,
+            day=27,
+            hour=12,
+            minute=10)
+        expected_sleeps_new_year = 5
+        with mock_datetime(target=today):
+            self.display.update(CALENDAR)
+        self.assertTrue(
+            call('New Year\'s Day in {} sleeps'.format(expected_sleeps_new_year))
+            in self.mock_matrix.show_message.call_args_list)
+        # no message about xmas only new years expected
+        self.assertTrue(1, len(self.mock_matrix.show_message.call_args_list))
 
     def test_display_shows_one_sleep(self):
         today = datetime.datetime(
@@ -61,7 +81,6 @@ class DisplayUpdateTests(TestBase):
         expected_sleeps = 1
         with mock_datetime(target=today):
             self.display.update(CALENDAR)
-        self.mock_matrix.show_message.assert_called_with(str(expected_sleeps))
         self.assertTrue(call('Christmas in 1 sleep') in 
             self.mock_matrix.show_message.call_args_list)
 

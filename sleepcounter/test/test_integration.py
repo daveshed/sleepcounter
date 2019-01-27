@@ -93,7 +93,7 @@ class IntegrationSecondCounterWithDisplay(TestBase):
         expected_sleeps = 2
         with mock_datetime(target=today):
             self.controller.update_widgets()
-        self.mock_matrix.show_message.assert_called_with(str(expected_sleeps))
+        self.mock_matrix.show_message.assert_called()
 
 
 class IntegrationSleepsCounterWithDisplay(TestBase):
@@ -134,4 +134,4 @@ class IntegrationSleepsCounterWithDisplay(TestBase):
         expected_sleeps = 2
         with mock_datetime(target=today):
             self.controller.update_widgets()
-        self.mock_matrix.show_message.assert_called_with(str(expected_sleeps))
+        self.mock_matrix.show_message.assert_called()
