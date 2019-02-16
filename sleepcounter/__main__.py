@@ -29,7 +29,11 @@ FELIXS_BIRTHDAY = SpecialDay(name='Felix\'s Birthday', month=6, day=16,)
 LEGOLAND = SpecialDay(name='Legoland', month=4, day=27,)
 TENERIFE = SpecialDay(name='Tenerife', month=2, day=19,)
 TOTTYS_PARTY = SpecialDay(name='Totty\'s Party', month=2, day=16,)
-
+GAGGAS_BIRTHDAY = SpecialDay(name='Gagga\'s Birthday', month=3, day=7,)
+BENS_BIRTHDAY = SpecialDay(name='Uncle Bens\'s Birthday', month=3, day=17,)
+GRANDAD_IAN = SpecialDay(name='Grandad Ian\'s Birthday', month=4, day=24,)
+NANNYS_BIRTHDAY = SpecialDay(name='Nannay\'s Birthday', month=5, day=11,)
+EASTER = SpecialDay(name='Easter', month=4, day=21,)
 
 CALENDAR = (
     Calendar()
@@ -39,6 +43,11 @@ CALENDAR = (
         .add_event(LEGOLAND)
         .add_event(TENERIFE)
         .add_event(TOTTYS_PARTY)
+        .add_event(GAGGAS_BIRTHDAY)
+        .add_event(BENS_BIRTHDAY)
+        .add_event(GRANDAD_IAN)
+        .add_event(NANNYS_BIRTHDAY)
+        .add_event(EASTER)
 )
 CONTROLLER = Controller(CALENDAR)
 CONTROLLER.register_widget(
