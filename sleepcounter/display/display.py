@@ -15,7 +15,7 @@ from sleepcounter.fonts.library import AVAILABLE_FONTS
 FONT_PATH = AVAILABLE_FONTS['Vera.ttf']
 FONT_SIZE = 9
 FONT = ImageFont.truetype(font=FONT_PATH, size=FONT_SIZE)
-SCROLL_RATE = 30 # pixels per second
+SCROLL_RATE = 40 # pixels per second
 VERTICAL_OFFSET = 0
 
 
