@@ -13,11 +13,16 @@ class Calendar:
     Interface to the library of special events. It allows you to lookup the next
     event and find out what is happening today.
     """
-    def __init__(self):
-        self._date_library = []
+    def __init__(self, events=None):
+        self._date_library = events if events else []
 
     def add_event(self, event):
-        """Add an event to the calendar"""
+        """
+        Add an event to the calendar
+
+        keyword arguments:
+        event -- an event instance
+        """
         self._date_library.append(event)
         return self
 
@@ -34,7 +39,12 @@ class Calendar:
     @property
     def events(self):
         """Returns all events objects in the calendar"""
-        return self._date_library
+        return [event for event in self._date_library if event.active]
+
+    @events.setter
+    def events(self, events: list):
+        """Update events contained in the calendar to a list of event objects"""
+        self._date_library = events
 
     @property
     def next_event(self):

@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import Mock, patch, call
 
 from sleepcounter.time.calendar import Calendar
-from sleepcounter.time.event import SpecialDay
+from sleepcounter.time.event import Anniversary
 from sleepcounter.mocks.datetime import mock_datetime
 from sleepcounter.widget.display import LedMatrixWidget
 
@@ -15,8 +15,8 @@ logging.basicConfig(
     stream=sys.stdout,
     level=logging.INFO)
 
-CHRISTMAS_DAY = SpecialDay(name='Christmas', month=12, day=25,)
-NEW_YEARS_DAY = SpecialDay(name="New Year\'s Day", month=1, day=1,)
+CHRISTMAS_DAY = Anniversary(name='Christmas', month=12, day=25,)
+NEW_YEARS_DAY = Anniversary(name="New Year\'s Day", month=1, day=1,)
 
 def create_calendar():
     return (

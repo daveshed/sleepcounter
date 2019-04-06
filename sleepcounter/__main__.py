@@ -9,10 +9,9 @@ from time import sleep
 from linearstage.config import STAGE_CONFIG
 from linearstage.stage import Stage
 from sleepcounter.controller import Controller
+from sleepcounter.diary import CUSTOM_DIARY
 from sleepcounter.display.display import LedMatrix
 from sleepcounter.display.factory import DISPLAY
-from sleepcounter.time.calendar import Calendar
-from sleepcounter.time.event import SpecialDay
 from sleepcounter.widget.display import LedMatrixWidget
 from sleepcounter.widget.stage import SleepsStageWidget
 
@@ -21,35 +20,7 @@ logging.basicConfig(
     stream=stdout,
     level=logging.INFO)
 
-# BONFIRE_NIGHT = SpecialDay(name='Bonfire Night', month=11, day=5,)
-# HALLOWEEN = SpecialDay(name='Halloween', month=10, day=31,)
-CHRISTMAS = SpecialDay(name='Christmas', month=12, day=25,)
-EVIES_BIRTHDAY = SpecialDay(name='Evie\'s Birthday', month=8, day=3,)
-FELIXS_BIRTHDAY = SpecialDay(name='Felix\'s Birthday', month=6, day=16,)
-LEGOLAND = SpecialDay(name='Legoland', month=4, day=27,)
-TENERIFE = SpecialDay(name='Tenerife', month=2, day=19,)
-TOTTYS_PARTY = SpecialDay(name='Totty\'s Party', month=2, day=16,)
-GAGGAS_BIRTHDAY = SpecialDay(name='Gagga\'s Birthday', month=3, day=7,)
-BENS_BIRTHDAY = SpecialDay(name='Uncle Bens\'s Birthday', month=3, day=17,)
-GRANDAD_IAN = SpecialDay(name='Grandad Ian\'s Birthday', month=4, day=24,)
-NANNYS_BIRTHDAY = SpecialDay(name='Nannay\'s Birthday', month=5, day=11,)
-EASTER = SpecialDay(name='Easter', month=4, day=21,)
-
-CALENDAR = (
-    Calendar()
-        .add_event(CHRISTMAS)
-        .add_event(EVIES_BIRTHDAY)
-        .add_event(FELIXS_BIRTHDAY)
-        .add_event(LEGOLAND)
-        .add_event(TENERIFE)
-        .add_event(TOTTYS_PARTY)
-        .add_event(GAGGAS_BIRTHDAY)
-        .add_event(BENS_BIRTHDAY)
-        .add_event(GRANDAD_IAN)
-        .add_event(NANNYS_BIRTHDAY)
-        .add_event(EASTER)
-)
-CONTROLLER = Controller(CALENDAR)
+CONTROLLER = Controller(CUSTOM_DIARY)
 CONTROLLER.register_widget(
     LedMatrixWidget(LedMatrix(DISPLAY)))
 CONTROLLER.register_widget(
