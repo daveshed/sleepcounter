@@ -16,7 +16,7 @@ from sleepcounter.widget.stage import (
 from sleepcounter.mocks.datetime import mock_datetime
 from sleepcounter.mocks.stage import MockStage
 from sleepcounter.time.calendar import Calendar
-from sleepcounter.time.event import SpecialDay
+from sleepcounter.time.event import Anniversary
 
 logging.basicConfig(
     format='%(asctime)s[%(name)s]:%(levelname)s:%(message)s',
@@ -30,8 +30,8 @@ JUST_BEFORE_XMAS = datetime.datetime(
     hour=8,
     minute=5)
 
-CHRISTMAS_DAY = SpecialDay(name='xmas', month=12, day=25,)
-NEW_YEARS_DAY = SpecialDay(name="New Year\'s Day", month=1, day=1,)
+CHRISTMAS_DAY = Anniversary(name='xmas', month=12, day=25,)
+NEW_YEARS_DAY = Anniversary(name="New Year\'s Day", month=1, day=1,)
 
 def create_calendar():
     return (

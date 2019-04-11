@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch, call
 from linearstage.config import STAGE_CONFIG
 from sleepcounter.controller import Controller
 from sleepcounter.time.calendar import Calendar
-from sleepcounter.time.event import SpecialDay
+from sleepcounter.time.event import Anniversary
 from sleepcounter.time.bedtime import SleepChecker
 ################# patch hardware specific modules before import ################
 import sys
@@ -28,9 +28,9 @@ logging.basicConfig(
     stream=sys.stdout,
     level=logging.INFO)
 
-BONFIRE_NIGHT = SpecialDay(name='Bonfire Night', month=11, day=5,)
-HALLOWEEN = SpecialDay(name='Halloween', month=10, day=31,)
-CHRISTMAS = SpecialDay(name='Christmas', month=12, day=25,)
+BONFIRE_NIGHT = Anniversary(name='Bonfire Night', month=11, day=5,)
+HALLOWEEN = Anniversary(name='Halloween', month=10, day=31,)
+CHRISTMAS = Anniversary(name='Christmas', month=12, day=25,)
 
 def create_calendar():
     return (
@@ -100,7 +100,8 @@ class IntegrationSecondCounterWithDisplay(TestBase):
             minute=10)
         with mock_datetime(target=today):
             self.controller.update_widgets()
-        self.assertTrue(call('Christmas in 2 sleeps') in 
+        self.assertIn(
+            call('Christmas in 2 sleeps'), 
             self.mock_matrix.show_message.call_args_list)
 
 
