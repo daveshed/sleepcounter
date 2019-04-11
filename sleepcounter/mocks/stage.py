@@ -1,7 +1,7 @@
 """Mock linear stage implementation"""
 import logging
 
-from linearstage.stage import OutOfRangeError
+from linearstage import error
 
 LOGGER = logging.getLogger("mock stage")
 
@@ -40,5 +40,6 @@ class MockStage:
         too_large = request > __class__.MAX_POS
         too_small = request < __class__.MIN_POS
         if too_large or too_small:
-            raise OutOfRangeError("Cannot go to position {}".format(request))
+            raise error.OutOfRangeError(
+                "Cannot go to position {}".format(request))
         self._position = request
