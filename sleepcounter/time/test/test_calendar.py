@@ -66,7 +66,7 @@ class CalendarDateKeeping(unittest.TestCase):
             calendar.add_event(xmas)
             self.assertNotIn(xmas, calendar.events)
 
-    def test_non_recurring_event_does_not_exist_after_seen(self):
+    def test_non_recurring_event_with_sleeps_does_not_exist_after_seen(self):
         # Test that after a non-recurring event has happened we don't report it
         # any longer. Should be reported before the date but not after.
         today = datetime.datetime(
@@ -75,14 +75,32 @@ class CalendarDateKeeping(unittest.TestCase):
             day=5,
             hour=9,
             minute=15)
+        foo = SpecialDay(
+            name='foo_event',
+            year=2018,
+            month=5,
+            day=3,
+            sleeps=10)
+        calendar = create_calendar()
+        calendar.add_event(foo)
         with mock_datetime(target=today):
-            foo = SpecialDay(
-                name='foo_event',
-                year=2018,
-                month=5,
-                day=3)
-            calendar = create_calendar()
-            calendar.add_event(foo)
+            self.assertNotIn(foo, calendar.events)
+
+    def test_non_recurring_event_without_sleeps_does_not_exist_after_seen(self):
+        today = datetime.datetime(
+            year=2018,
+            month=5,
+            day=5,
+            hour=9,
+            minute=15)
+        foo = SpecialDay(
+            name='foo_event',
+            year=2018,
+            month=5,
+            day=3)
+        calendar = create_calendar()
+        calendar.add_event(foo)
+        with mock_datetime(target=today):
             self.assertNotIn(foo, calendar.events)
 
     def test_non_recurring_event_exists_before_seen(self):
