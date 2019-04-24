@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import sys
 import unittest
 from unittest.mock import Mock, patch, call
 
@@ -9,12 +10,6 @@ from sleepcounter.controller import Controller
 from sleepcounter.time.calendar import Calendar
 from sleepcounter.time.event import Anniversary
 from sleepcounter.time.bedtime import SleepChecker
-################# patch hardware specific modules before import ################
-import sys
-# This only seems to work in python 3.7
-sys.modules['RPi.GPIO'] = Mock()
-sys.modules['max7219.led'] = Mock()
-################################################################################
 from sleepcounter.mocks.stage import MockStage
 from sleepcounter.mocks.datetime import mock_datetime
 from sleepcounter.widget.display import LedMatrixWidget
@@ -31,15 +26,7 @@ logging.basicConfig(
 BONFIRE_NIGHT = Anniversary(name='Bonfire Night', month=11, day=5,)
 HALLOWEEN = Anniversary(name='Halloween', month=10, day=31,)
 CHRISTMAS = Anniversary(name='Christmas', month=12, day=25,)
-
-def create_calendar():
-    return (
-        Calendar()
-            .add_event(BONFIRE_NIGHT)
-            .add_event(HALLOWEEN)
-            .add_event(CHRISTMAS)
-        )
-
+EVENTS = [BONFIRE_NIGHT, HALLOWEEN, CHRISTMAS]
 MAX_STAGE_LIMIT = STAGE_CONFIG['max_limit']
 
 
@@ -51,12 +38,11 @@ class TestBase(unittest.TestCase):
 
     def setUp(self):
         self._clean_up_tmp_files()
+        self.controller = Controller(Calendar(EVENTS))
         self.mock_matrix = Mock()
-        self.calendar = create_calendar()
-        self.controller = Controller(self.calendar)
-        self.linearstage = MockStage()
         self.display = LedMatrixWidget(self.mock_matrix)
         self.controller.register_widget(self.display)
+        self.linearstage = MockStage()
 
     def tearDown(self):
         self._clean_up_tmp_files()

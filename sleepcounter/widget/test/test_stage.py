@@ -4,19 +4,15 @@ import logging
 import os
 import sys
 import unittest
-################# patch hardware specific modules before import ################
-# This only seems to work in python 3.7
-sys.modules['RPi.GPIO'] = Mock()
-from sleepcounter.widget.stage import (
-    SecondsStageWidget,
-    SleepsStageWidget,
-    DEFAULT_RECOVERY_FILE)
-################################################################################
 
 from sleepcounter.mocks.datetime import mock_datetime
 from sleepcounter.mocks.stage import MockStage
 from sleepcounter.time.calendar import Calendar
 from sleepcounter.time.event import Anniversary
+from sleepcounter.widget.stage import (
+    SecondsStageWidget,
+    SleepsStageWidget,
+    DEFAULT_RECOVERY_FILE)
 
 logging.basicConfig(
     format='%(asctime)s[%(name)s]:%(levelname)s:%(message)s',
