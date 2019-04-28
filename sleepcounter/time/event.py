@@ -68,10 +68,12 @@ class EventBase(ABC):
         yet due to be displayed, True otherwise.
         """
         result = False
+        event_past = self.sleeps_remaining < 0
         if self._sleeps:
-            result = self.sleeps_remaining < self._sleeps
+            counted_sleeps = self.sleeps_remaining > self._sleeps
+            result = not (event_past or counted_sleeps)
         else:
-            result = self.sleeps_remaining > 0
+            result = not event_past
         return result
 
     @property
