@@ -13,7 +13,7 @@ class Calendar:
     Interface to the library of special events. It allows you to lookup the next
     event and find out what is happening today.
     """
-    def __init__(self, events: list=None):
+    def __init__(self, events: list = None):
         self._date_library = events if events else []
 
     def add_event(self, event):
