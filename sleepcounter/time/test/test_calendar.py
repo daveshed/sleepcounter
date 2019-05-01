@@ -85,6 +85,7 @@ class CalendarDateKeeping(unittest.TestCase):
         calendar.add_event(foo)
         with mock_datetime(target=today):
             self.assertNotIn(foo, calendar.events)
+            self.assertEqual(HALLOWEEN, calendar.next_event)
 
     def test_non_recurring_event_without_sleeps_does_not_exist_after_seen(self):
         today = datetime.datetime(
@@ -102,6 +103,7 @@ class CalendarDateKeeping(unittest.TestCase):
         calendar.add_event(foo)
         with mock_datetime(target=today):
             self.assertNotIn(foo, calendar.events)
+            self.assertEqual(HALLOWEEN, calendar.next_event)
 
     def test_non_recurring_event_exists_before_seen(self):
         # Test that before a non-recurring event has happened we do actually see

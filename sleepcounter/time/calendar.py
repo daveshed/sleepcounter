@@ -50,7 +50,7 @@ class Calendar:
     def next_event(self):
         """Get the next event to happen"""
         deltas = \
-            {ev: ev.seconds_remaining for ev in self._date_library}
+            {ev: ev.seconds_remaining for ev in self.events}
         next_event = min(deltas, key=deltas.get)
         LOGGER.info("Next event is %s", next_event.name)
         return next_event
