@@ -1,4 +1,5 @@
 PROJECT_TEST_DIR:=tests
+PROJECT_NAME:=sleepcounter
 
 .PHONY: install-requirements
 install-requirements:
@@ -10,12 +11,16 @@ install: install-requirements
 	echo "INSTALLING PYTHON MODULE..."
 	pip install -e . --no-deps
 
+.PHONY: check
+check: install
+	pylint $(PROJECT_NAME) --reports=y
+
 .PHONY: test
 test: install | $(PROJECT_TEST_DIR)
 	echo "RUNNING PYTEST..."
 	pytest -sv --log-cli-level=INFO $(PROJECT_TEST_DIR)
 
 .PHONY: wheel
-wheel: test 
+wheel: test check
 	echo "BUILDING WHEEL..."
 	python setup.py bdist_wheel
