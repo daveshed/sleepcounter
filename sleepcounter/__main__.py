@@ -8,7 +8,7 @@ from time import sleep
 
 from linearstage.config import STAGE_CONFIG
 from linearstage.stage import Stage
-from sleepcounter.controller import Controller
+from sleepcounter.application import Application
 from sleepcounter.diary import CUSTOM_DIARY
 from sleepcounter.display.display import LedMatrix
 from sleepcounter.display.factory import DISPLAY
@@ -20,12 +20,22 @@ logging.basicConfig(
     stream=stdout,
     level=logging.INFO)
 
-CONTROLLER = Controller(CUSTOM_DIARY)
-CONTROLLER.register_widget(
-    LedMatrixWidget(LedMatrix(DISPLAY)))
-CONTROLLER.register_widget(
-    SleepsStageWidget(Stage.from_config(STAGE_CONFIG)))
+def main():
+    """Application main function. Instantiates some widgets and runs the app"""
+    display_widget = LedMatrixWidget(
+        display=LedMatrix(DISPLAY),
+        calendar=CUSTOM_DIARY)
+    stage_widget = SleepsStageWidget(
+        stage=Stage.from_config(STAGE_CONFIG),
+        calendar=CUSTOM_DIARY)
+    app = Application(widgets=[display_widget, stage_widget])
+    app.start()
+    while True:
+        try:
+            sleep(1)
+        except KeyboardInterrupt:
+            app.stop()
+            break
 
-while True:
-    CONTROLLER.update_widgets()
-    sleep(10)
+if __name__ == "__main__":
+    main()

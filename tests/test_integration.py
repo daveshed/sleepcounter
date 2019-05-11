@@ -2,10 +2,11 @@ import datetime
 import logging
 import os
 import sys
-import unittest
+from time import sleep
+from unittest import TestCase
 from unittest.mock import Mock, patch, call
 
-from sleepcounter.controller import Controller
+from sleepcounter.application import Application
 from sleepcounter.time.calendar import Calendar
 from sleepcounter.time.event import Anniversary
 from sleepcounter.time.bedtime import SleepChecker
@@ -17,19 +18,15 @@ from sleepcounter.widget.stage import (
     SleepsStageWidget,
     DEFAULT_RECOVERY_FILE)
 
-logging.basicConfig(
-    format='%(asctime)s[%(name)s]:%(levelname)s:%(message)s',
-    stream=sys.stdout,
-    level=logging.INFO)
-
 BONFIRE_NIGHT = Anniversary(name='Bonfire Night', month=11, day=5,)
 HALLOWEEN = Anniversary(name='Halloween', month=10, day=31,)
 CHRISTMAS = Anniversary(name='Christmas', month=12, day=25,)
 EVENTS = [BONFIRE_NIGHT, HALLOWEEN, CHRISTMAS]
 MAX_STAGE_LIMIT = 1000
+APP_UPDATE_WAIT_SEC = 1
 
 
-class TestBase(unittest.TestCase):
+class TestBase(TestCase):
 
     def _clean_up_tmp_files(self):
         if os.path.exists(DEFAULT_RECOVERY_FILE):
@@ -37,22 +34,28 @@ class TestBase(unittest.TestCase):
 
     def setUp(self):
         self._clean_up_tmp_files()
-        self.controller = Controller(Calendar(EVENTS))
+        self.calendar = Calendar(EVENTS)
         self.mock_matrix = Mock()
-        self.display = LedMatrixWidget(self.mock_matrix)
-        self.controller.register_widget(self.display)
+        self.display_widget = LedMatrixWidget(self.mock_matrix, self.calendar)
         self.linearstage = MockStage()
+        self.seconds_stage_widget = SecondsStageWidget(
+            stage=self.linearstage, calendar=self.calendar)
+        self.sleeps_stage_widget = SleepsStageWidget(
+            stage=self.linearstage, calendar=self.calendar)
+        self.app = None
 
     def tearDown(self):
         self._clean_up_tmp_files()
+        self.app.stop()
 
 
 class IntegrationSecondCounterWithDisplay(TestBase):
 
     def setUp(self):
         super().setUp()
-        self.controller.register_widget(
-            SecondsStageWidget(stage=self.linearstage))
+        self.app = Application(
+            widgets=[self.display_widget, self.seconds_stage_widget])
+        self.app.start()
 
     def test_linear_stage_updates_position(self):
         today = datetime.datetime(
@@ -62,7 +65,7 @@ class IntegrationSecondCounterWithDisplay(TestBase):
             hour=12,
             minute=10)
         with mock_datetime(target=today):
-            self.controller.update_widgets()
+            sleep(APP_UPDATE_WAIT_SEC)
         # stage should home first
         self.assertEqual(MockStage.MIN_POS, self.linearstage.position)
         xmas = datetime.date(year=2018, month=12, day=25)
@@ -71,7 +74,7 @@ class IntegrationSecondCounterWithDisplay(TestBase):
         time_elapsed = datetime.timedelta(days=1)
         tomorrow = today + time_elapsed
         with mock_datetime(target=tomorrow):
-            self.controller.update_widgets()
+            sleep(APP_UPDATE_WAIT_SEC)
         expected_position = \
             int(time_elapsed / time_to_event * MockStage.MAX_POS)
         self.assertEqual(expected_position, self.linearstage.position)
@@ -84,7 +87,7 @@ class IntegrationSecondCounterWithDisplay(TestBase):
             hour=12,
             minute=10)
         with mock_datetime(target=today):
-            self.controller.update_widgets()
+            sleep(APP_UPDATE_WAIT_SEC)
         self.assertIn(
             call('Christmas in 2 sleeps'), 
             self.mock_matrix.show_message.call_args_list)
@@ -94,8 +97,9 @@ class IntegrationSleepsCounterWithDisplay(TestBase):
 
     def setUp(self):
         super().setUp()
-        self.controller.register_widget(
-            SleepsStageWidget(stage=self.linearstage))
+        self.app = Application(
+            widgets=[self.display_widget, self.sleeps_stage_widget])
+        self.app.start()
 
     def test_linear_stage_updates_position(self):
         reset_time = datetime.datetime(
@@ -105,7 +109,7 @@ class IntegrationSleepsCounterWithDisplay(TestBase):
             hour=12,
             minute=10)
         with mock_datetime(target=reset_time):
-            self.controller.update_widgets()
+            sleep(APP_UPDATE_WAIT_SEC)
         # stage should reset and move to minimum position
         self.assertEqual(MockStage.MIN_POS, self.linearstage.position)
         expected_sleeps = 2
@@ -113,7 +117,7 @@ class IntegrationSleepsCounterWithDisplay(TestBase):
         sleeps_elapsed = 1
         tomorrow = reset_time + datetime.timedelta(days=1)
         with mock_datetime(target=tomorrow):
-            self.controller.update_widgets()
+            sleep(APP_UPDATE_WAIT_SEC)
         expected_position = \
             int(sleeps_elapsed / expected_sleeps * MockStage.MAX_POS)
         self.assertEqual(expected_position, self.linearstage.position)
@@ -126,6 +130,6 @@ class IntegrationSleepsCounterWithDisplay(TestBase):
             hour=12,
             minute=10)
         with mock_datetime(target=today):
-            self.controller.update_widgets()
+            sleep(APP_UPDATE_WAIT_SEC)
         self.assertTrue(call('Christmas in 2 sleeps') in 
             self.mock_matrix.show_message.call_args_list)

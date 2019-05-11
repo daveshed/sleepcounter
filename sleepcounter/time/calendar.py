@@ -66,7 +66,7 @@ class Calendar:
         Checks whether today is a special day registered in the calendar and
         returns the result as a bool
         """
-        result = any(event.today for event in self._date_library)
+        result = any(event.today for event in self.events)
         LOGGER.info("Today %s special", ("is" if result else "is not"))
         return result
 

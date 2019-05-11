@@ -55,8 +55,13 @@ class StageWidgetBase(BaseWidget):
     """
     units = None
 
-    def __init__(self, stage, recovery_file=DEFAULT_RECOVERY_FILE):
-        LOGGER.info("Instantiating %s", self)
+    def __init__(
+            self,
+            stage,
+            calendar,
+            label=None,
+            recovery_file=DEFAULT_RECOVERY_FILE):
+        super().__init__(calendar, label)
         self._persistent_data = RecoveryData(recovery_file)
         recovered = self._persistent_data.recover()
         if recovered is None:
@@ -69,43 +74,42 @@ class StageWidgetBase(BaseWidget):
                 self._total_time,
                 self.units,
                 self._next_event)
-        self.stage = stage
-        self.stage.home()
+        self._stage = stage
+        self._stage.home()
 
-    def update(self, calendar):
+    def update(self):
         """
         Update the position of the stage based on the time to the event. If
         today i/s a special day, then restart the timer and don't move. Otherwise
         go home and scale the position based on the time remaining to the event.
         """
-        LOGGER.info("Updating with calendar %s", calendar)
-        if calendar.special_day_today:
+        LOGGER.info("Updating with calendar %s", self._calendar)
+        if self._calendar.special_day_today:
             LOGGER.info("Today is a special day. Moving stage to end position")
             self._total_time = None
-            self.stage.end()
+            self._stage.end()
         else:
             if (self._total_time is None
-                    or calendar.next_event != self._next_event):
+                    or self._calendar.next_event != self._next_event):
                 LOGGER.info("Setting initial time. Homing stage")
-                self._next_event = calendar.next_event
-                self._total_time = self._get_time_to_next_event(calendar)
-                self.stage.home()
+                self._next_event = self._calendar.next_event
+                self._total_time = self._get_time_to_next_event()
+                self._stage.home()
                 self._persistent_data.record(
                     (self._total_time, self._next_event,))
             else:
                 time_done = \
-                    (self._total_time - self._get_time_to_next_event(calendar))
-                pos = int(time_done / self._total_time * self.stage.max)
+                    (self._total_time - self._get_time_to_next_event())
+                pos = int(time_done / self._total_time * self._stage.max)
                 LOGGER.info(
                     "%r %s to next event. Updating position to %d",
-                    self._get_time_to_next_event(calendar),
+                    self._get_time_to_next_event(),
                     self.units,
                     pos,
                 )
-                self.stage.position = pos
+                self._stage.position = pos
 
-    @staticmethod
-    def _get_time_to_next_event(calendar):
+    def _get_time_to_next_event(self):
         raise NotImplementedError
 
 
@@ -117,9 +121,8 @@ class SecondsStageWidget(StageWidgetBase):
     """
     units = "seconds"
 
-    @staticmethod
-    def _get_time_to_next_event(calendar):
-        return calendar.seconds_to_next_event
+    def _get_time_to_next_event(self):
+        return self._calendar.seconds_to_next_event
 
 
 class SleepsStageWidget(StageWidgetBase):
@@ -130,6 +133,5 @@ class SleepsStageWidget(StageWidgetBase):
     """
     units = "sleeps"
 
-    @staticmethod
-    def _get_time_to_next_event(calendar):
-        return calendar.sleeps_to_next_event
+    def _get_time_to_next_event(self):
+        return self._calendar.sleeps_to_next_event
