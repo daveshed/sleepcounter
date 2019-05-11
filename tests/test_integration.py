@@ -5,7 +5,6 @@ import sys
 import unittest
 from unittest.mock import Mock, patch, call
 
-from linearstage.config import STAGE_CONFIG
 from sleepcounter.controller import Controller
 from sleepcounter.time.calendar import Calendar
 from sleepcounter.time.event import Anniversary
@@ -27,7 +26,7 @@ BONFIRE_NIGHT = Anniversary(name='Bonfire Night', month=11, day=5,)
 HALLOWEEN = Anniversary(name='Halloween', month=10, day=31,)
 CHRISTMAS = Anniversary(name='Christmas', month=12, day=25,)
 EVENTS = [BONFIRE_NIGHT, HALLOWEEN, CHRISTMAS]
-MAX_STAGE_LIMIT = STAGE_CONFIG['max_limit']
+MAX_STAGE_LIMIT = 1000
 
 
 class TestBase(unittest.TestCase):
