@@ -89,21 +89,22 @@ class StageWidgetBase(BaseWidget):
             self._total_time = None
             self._stage.end()
         else:
+            time_to_event = self._get_time_to_next_event()
             if (self._total_time is None
                     or self._calendar.next_event != self._next_event):
                 LOGGER.info("Setting initial time. Homing stage")
                 self._next_event = self._calendar.next_event
-                self._total_time = self._get_time_to_next_event()
+                self._total_time = time_to_event
                 self._stage.home()
                 self._persistent_data.record(
                     (self._total_time, self._next_event,))
             else:
                 time_done = \
-                    (self._total_time - self._get_time_to_next_event())
+                    (self._total_time - time_to_event)
                 pos = int(time_done / self._total_time * self._stage.max)
                 LOGGER.info(
                     "%r %s to next event. Updating position to %d",
-                    self._get_time_to_next_event(),
+                    time_to_event,
                     self.units,
                     pos,
                 )
