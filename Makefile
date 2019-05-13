@@ -18,7 +18,7 @@ check: install
 .PHONY: test
 test: install | $(PROJECT_TEST_DIR)
 	echo "RUNNING PYTEST..."
-	pytest -sv --log-cli-level=INFO $(PROJECT_TEST_DIR)
+	pytest -sxv --log-cli-level=INFO $(PROJECT_TEST_DIR)
 
 .PHONY: wheel
 wheel: test check
