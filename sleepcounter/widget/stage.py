@@ -80,7 +80,7 @@ class StageWidgetBase(BaseWidget):
     def update(self):
         """
         Update the position of the stage based on the time to the event. If
-        today i/s a special day, then restart the timer and don't move. Otherwise
+        today is a special day, then restart the timer and don't move. Otherwise
         go home and scale the position based on the time remaining to the event.
         """
         LOGGER.info("Updating with calendar %s", self._calendar)

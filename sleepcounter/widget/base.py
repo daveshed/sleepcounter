@@ -6,7 +6,7 @@ from threading import Event, Thread
 from time import sleep
 
 _LOGGER = getLogger("widget")
-_UPDATE_INTERVAL_SEC = 1
+_UPDATE_INTERVAL_SEC = 0.2
 
 
 class BaseWidget(ABC, Thread):

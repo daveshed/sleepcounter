@@ -85,7 +85,7 @@ class EventBase(ABC):
     def sleeps_remaining(self):
         """Return the number of sleeps to a until the event"""
         sleeps = ceil(self.seconds_remaining / _SECONDS_PER_DAY)
-        LOGGER.info("%s sleeps to event %s", sleeps, self.name)
+        LOGGER.debug("%s sleeps to event %s", sleeps, self.name)
         return sleeps
 
     @property
@@ -95,14 +95,15 @@ class EventBase(ABC):
         """
         special = False
         if SleepChecker.is_nighttime():
-            LOGGER.info("It's nighttime right now. Wait until morning")
+            LOGGER.debug("It's nighttime right now. Wait until morning")
         else:
             today = datetime.datetime.today()
             special = self.month == today.month and self.day == today.day
-            LOGGER.info(
-                "The date is %s. It's %s",
+            LOGGER.debug(
+                "Date: %s; It %s %s",
                 today,
-                (self.name if special else "not a special day"))
+                ("is" if special else "is not"),
+                self.name)
         return special
 
     @staticmethod

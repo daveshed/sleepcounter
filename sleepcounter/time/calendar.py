@@ -87,7 +87,10 @@ class Calendar:
     def seconds_to_next_event(self):
         """Returns the time to the next event in seconds"""
         seconds = self.seconds_to_event(self.next_event)
-        LOGGER.info("%s seconds to next event", seconds)
+        LOGGER.info(
+            "%s seconds to next event (%s)",
+            seconds,
+            self.next_event.name)
         return seconds
 
     @property
