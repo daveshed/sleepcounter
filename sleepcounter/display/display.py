@@ -2,6 +2,8 @@
 Led matrix interface implemenation which extends the abstract base class and
 makes calls to the driver simpler.
 """
+from logging import getLogger
+from threading import Event, Thread
 from time import sleep
 from PIL import ImageFont
 
@@ -12,41 +14,111 @@ from luma.led_matrix.device import max7219
 from sleepcounter.display.interface import LedMatrixInterface
 from sleepcounter.fonts.library import AVAILABLE_FONTS
 
-FONT_PATH = AVAILABLE_FONTS['Vera.ttf']
-FONT_SIZE = 9
-FONT = ImageFont.truetype(font=FONT_PATH, size=FONT_SIZE)
 SCROLL_RATE = 40 # pixels per second
 VERTICAL_OFFSET = 0
+
+_LOGGER = getLogger("led matrix")
 
 
 class LedMatrix(LedMatrixInterface):
     """Led matrix implementation - an interface to the luma core library"""
-    def __init__(self, display: max7219):
-        """Creates the interface from a MAX7219 display instance"""
-        self.display = display
-        self.virtual = viewport(display, width=200, height=100)
+    def __init__(self, device: max7219):
+        """Creates the interface from a MAX7219 device instance"""
+        _LOGGER.info("Instantiated LED matrix device %r with unit %r ",
+            self, device)
+        self.device = device
+        self.virtual = viewport(device, width=200, height=100)
+        self._message = None
+        self._worker = _DeviceThreadManager(self._scroll_text_once)
 
-    def show_message(self, message, scroll=False):
-        text = message.upper()
-        text_length, _ = FONT.getsize(text)
-        # automatically scroll if the message is too long
-        if text_length > self.display.width:
-            scroll = True
-        if not scroll:
-            self._show_text(text)
+    def show_message(self, text: str, scroll=False):
+        """
+        Show the message. If the message fits the display, it will be shown
+        static. If it's too long, it will be scrolled across the display.
+        Scrolling may be forced optionally with the scroll arg.
+        """
+        self.clear()
+        self._message = _Message(text)
+        if (self._message.length > self.device.width) or scroll:
+            _LOGGER.info("Scrolling message %s...", self._message.text)
+            self._scroll_text()
         else:
-            for offset in range(text_length + self.display.width):
-                self._show_text(text, self.display.width - offset)
-                sleep(1 / SCROLL_RATE)
+            _LOGGER.info("Showing static message %s...", self._message.text)
+            self._show_text()
 
     def clear(self):
-        self.display.clear()
+        _LOGGER.info("Clearing display %r" % self)
+        self._worker.stop()
+        self.device.clear()
+        self._message = None
 
-    def _show_text(self, text, offset=0):
+    def _show_text(self, offset: int=0):
+        _LOGGER.debug(
+            "Showing: <text:%s><offset:%d>", self._message.text, offset)
         with canvas(self.virtual) as draw:
             draw.text(
                 (offset, VERTICAL_OFFSET),
-                text,
-                font=FONT,
+                self._message.text,
+                font=_Message.FONT,
                 fill="white",
             )
+
+    def _scroll_text(self):
+        self._worker.start()
+
+    def _scroll_text_once(self):
+        for offset in range(self._message.length + self.device.width):
+            self._show_text(self.device.width - offset)
+            sleep(1 / SCROLL_RATE)
+
+
+class _Message:
+    FONT_PATH = AVAILABLE_FONTS['Vera.ttf']
+    FONT_SIZE = 9
+    FONT = ImageFont.truetype(font=FONT_PATH, size=FONT_SIZE)
+
+    def __init__(self, text: str):
+        self._text = text.upper()
+
+    @property
+    def text(self):
+        return self._text
+    
+    @property
+    def length(self):
+        length, _ = self.__class__.FONT.getsize(self.text)
+        return length
+
+    @property
+    def height(self):
+        _, height = self.__class__.FONT.getsize(self.text)
+        return height
+
+
+class _DeviceThreadManager:
+
+    def __init__(self, target):
+        self._target = target
+        self._active = Event()
+        self._thread = None
+
+    def start(self):
+        if self._active:
+            _LOGGER.debug("Already active")
+            self.stop()
+        _LOGGER.debug("Restarting thread...")
+        self._thread = Thread(
+            target=self._activity,
+            daemon=True)
+        self._thread.start()
+
+    def stop(self):
+        if self._thread:
+            _LOGGER.debug("Tearing down thread")
+            self._active.clear()
+            self._thread.join()
+
+    def _activity(self):
+        self._active.set()
+        while self._active.is_set():
+            self._target()
