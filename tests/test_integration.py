@@ -3,7 +3,7 @@ import logging
 import os
 import sys
 from time import sleep
-from unittest import TestCase
+from unittest import TestCase, skip
 from unittest.mock import Mock, patch, call
 
 from sleepcounter.application import Application
@@ -60,6 +60,7 @@ class IntegrationSecondCounterWithDisplay(TestBase):
             widgets=[self.display_widget, self.seconds_stage_widget])
         self.app.start()
 
+    @skip("second stage counter deprecated")
     def test_linear_stage_updates_position(self):
         today = datetime.datetime(
             year=2018,
@@ -82,6 +83,7 @@ class IntegrationSecondCounterWithDisplay(TestBase):
             int(time_elapsed / time_to_event * MockStage.MAX_POS)
         self.assertEqual(expected_position, self.linearstage.position)
 
+    @skip("second stage counter deprecated")
     def test_led_matrix_updates_display(self):
         today = datetime.datetime(
             year=2018,
