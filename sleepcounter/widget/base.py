@@ -5,8 +5,9 @@ from logging import getLogger
 from threading import Event, Thread
 from time import sleep
 
+from sleepcounter.widget import config
+
 _LOGGER = getLogger("widget")
-_UPDATE_INTERVAL_SEC = 0.2
 
 
 class BaseWidget(ABC, Thread):
@@ -67,5 +68,5 @@ class BaseWidget(ABC, Thread):
     def _refresh(self):
         while self.running:
             self.update()
-            sleep(_UPDATE_INTERVAL_SEC)
+            sleep(60 / config.get_update_rate())
         _LOGGER.info("Widget %r has stopped", self)
