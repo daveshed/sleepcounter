@@ -12,7 +12,7 @@ from sleepcounter.time.event import Anniversary
 from sleepcounter.time.bedtime import SleepChecker
 from sleepcounter.mocks.stage import MockStage
 from sleepcounter.mocks.datetime import mock_datetime
-from sleepcounter.widget import config
+from sleepcounter.widget.base import BaseWidget
 from sleepcounter.widget.display import LedMatrixWidget
 from sleepcounter.widget.stage import (
     SecondsStageWidget,
@@ -25,8 +25,7 @@ CHRISTMAS = Anniversary(name='Christmas', month=12, day=25,)
 EVENTS = [BONFIRE_NIGHT, HALLOWEEN, CHRISTMAS]
 MAX_STAGE_LIMIT = 1000
 APP_UPDATE_WAIT_SEC = 1
-# 120 updates per minute = 2 updates per second
-config.set_update_rate(120)
+BaseWidget.mins_between_updates = 1 / 120 # 2 updates per second
 
 
 class TestBase(TestCase):

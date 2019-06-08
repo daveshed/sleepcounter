@@ -9,15 +9,14 @@ from unittest.mock import Mock, patch, call
 from sleepcounter.time.calendar import Calendar
 from sleepcounter.time.event import Anniversary
 from sleepcounter.mocks.datetime import mock_datetime
-from sleepcounter.widget import config
+from sleepcounter.widget.base import BaseWidget
 from sleepcounter.widget.display import LedMatrixWidget
 
 CHRISTMAS_DAY = Anniversary(name='Christmas', month=12, day=25,)
 NEW_YEARS_DAY = Anniversary(name="New Year\'s Day", month=1, day=1,)
 CALENDAR = Calendar([CHRISTMAS_DAY, NEW_YEARS_DAY])
 WIDGET_UPDATE_WAIT_SEC = 1
-# 120 updates per minute = 2 updates per second
-config.set_update_rate(120)
+BaseWidget.mins_between_updates = 1 / 120 # 2 updates per second
 
 
 class TestBase(unittest.TestCase):

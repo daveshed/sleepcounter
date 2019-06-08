@@ -24,7 +24,8 @@ class LedMatrix(LedMatrixInterface):
     """Led matrix implementation - an interface to the luma core library"""
     def __init__(self, device: max7219):
         """Creates the interface from a MAX7219 device instance"""
-        _LOGGER.info("Instantiated LED matrix device %r with unit %r ",
+        _LOGGER.info(
+            "Instantiated LED matrix device %r with unit %r ",
             self, device)
         self.device = device
         self.virtual = viewport(device, width=200, height=100)
@@ -47,12 +48,15 @@ class LedMatrix(LedMatrixInterface):
             self._show_text()
 
     def clear(self):
-        _LOGGER.info("Clearing display %r" % self)
+        """
+        Clear the display
+        """
+        _LOGGER.info("Clearing display %r", self)
         self._worker.stop()
         self.device.clear()
         self._message = None
 
-    def _show_text(self, offset: int=0):
+    def _show_text(self, offset=0):
         _LOGGER.debug(
             "Showing: <text:%s><offset:%d>", self._message.text, offset)
         with canvas(self.virtual) as draw:
@@ -78,19 +82,31 @@ class _Message:
     FONT = ImageFont.truetype(font=FONT_PATH, size=FONT_SIZE)
 
     def __init__(self, text: str):
+        """
+        Builds a message to display on the device from text
+        """
         self._text = text.upper()
 
     @property
     def text(self):
+        """
+        Returns the text contained in the message
+        """
         return self._text
-    
+
     @property
     def length(self):
+        """
+        Returns the length of the message in pixels
+        """
         length, _ = self.__class__.FONT.getsize(self.text)
         return length
 
     @property
     def height(self):
+        """
+        Returns the height of the message in pixels
+        """
         _, height = self.__class__.FONT.getsize(self.text)
         return height
 
@@ -98,11 +114,17 @@ class _Message:
 class _DeviceThreadManager:
 
     def __init__(self, target):
+        """
+        Manages the device's thread of activity
+        """
         self._target = target
         self._active = Event()
         self._thread = None
 
     def start(self):
+        """
+        Start the thread of activity
+        """
         if self._active:
             _LOGGER.debug("Already active")
             self.stop()
@@ -113,6 +135,9 @@ class _DeviceThreadManager:
         self._thread.start()
 
     def stop(self):
+        """
+        Stop the thread of activity
+        """
         if self._thread:
             _LOGGER.debug("Tearing down thread")
             self._active.clear()

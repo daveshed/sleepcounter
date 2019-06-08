@@ -5,8 +5,6 @@ from logging import getLogger
 from threading import Event, Thread
 from time import sleep
 
-from sleepcounter.widget import config
-
 _LOGGER = getLogger("widget")
 
 
@@ -19,6 +17,7 @@ class BaseWidget(ABC, Thread):
     calendar and act accordingly.
     """
     daemon = True
+    mins_between_updates = 120
 
     def __init__(self, calendar, label=None):
         self._label = label
@@ -68,5 +67,5 @@ class BaseWidget(ABC, Thread):
     def _refresh(self):
         while self.running:
             self.update()
-            sleep(60 / config.get_update_rate())
+            sleep(60 * BaseWidget.mins_between_updates)
         _LOGGER.info("Widget %r has stopped", self)

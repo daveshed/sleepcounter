@@ -9,7 +9,7 @@ from sleepcounter.mocks.datetime import mock_datetime
 from sleepcounter.mocks.stage import MockStage
 from sleepcounter.time.calendar import Calendar
 from sleepcounter.time.event import Anniversary
-from sleepcounter.widget import config
+from sleepcounter.widget.base import BaseWidget
 from sleepcounter.widget.stage import (
     SecondsStageWidget,
     SleepsStageWidget,
@@ -27,8 +27,7 @@ CALENDAR = Calendar([CHRISTMAS_DAY, NEW_YEARS_DAY])
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 ALTERNATIVE_FILE_PATH = DIR_PATH + '/tmp'
 WIDGET_UPDATE_WAIT_SEC = 1
-# update the widgets 2x per sec
-config.set_update_rate(120)
+BaseWidget.mins_between_updates = 1 / 120 # 2 updates per second
 
 
 class TestBase(TestCase):
