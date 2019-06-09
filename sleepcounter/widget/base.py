@@ -12,7 +12,7 @@ class BaseWidget(ABC, Thread):
     # pylint: disable=too-few-public-methods
     """
     The interface for all widgets to implement. Each widget represents the date
-    somehow. They must implement an update method that will be called from 
+    somehow. They must implement an update method that will be called from
     inside a thread.
     """
     daemon = True
