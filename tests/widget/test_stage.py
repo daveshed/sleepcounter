@@ -33,10 +33,14 @@ BaseWidget.mins_between_updates = 1 / 120 # 2 updates per second
 class TestBase(TestCase):
 
     def _clean_up_tmp_files(self):
-        if os.path.exists(DEFAULT_RECOVERY_FILE):
+        try:
             os.remove(DEFAULT_RECOVERY_FILE)
-        if os.path.exists(ALTERNATIVE_FILE_PATH):
+        except OSError:
+            pass
+        try:
             os.remove(ALTERNATIVE_FILE_PATH)
+        except OSError:
+            pass
 
     def setUp(self):
         self._clean_up_tmp_files()

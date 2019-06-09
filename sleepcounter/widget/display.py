@@ -42,12 +42,10 @@ class LedMatrixWidget(BaseWidget):
         self._display.show_message(self._message)
 
     def _handle_regular_day(self):
+        self._message = ""
         for event in self._calendar.events:
-            sleeps = self._calendar.sleeps_to_event(event)
-            unit = 'sleeps' if sleeps > 1 else 'sleep'
-            self._message = "{} in {} {}".format(
-                event.name, sleeps, unit)
-            LOGGER.info(
-                "Updating with calendar %s. Setting message to <%s>",
-                self._calendar, self._message)
-            self._display.show_message(self._message)
+            n_sleeps = self._calendar.sleeps_to_event(event)
+            unit = 'sleeps' if n_sleeps > 1 else 'sleep'
+            self._message += "%s in %s %s . . . " % (event.name, n_sleeps, unit)
+        LOGGER.info("Setting message to <%s>", self._message)
+        self._display.show_message(self._message)

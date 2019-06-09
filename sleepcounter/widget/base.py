@@ -12,9 +12,8 @@ class BaseWidget(ABC, Thread):
     # pylint: disable=too-few-public-methods
     """
     The interface for all widgets to implement. Each widget represents the date
-    somehow. They are observers of the Controller class and must implement an
-    update method that takes an instance of calendar. The widget can access the
-    calendar and act accordingly.
+    somehow. They must implement an update method that will be called from 
+    inside a thread.
     """
     daemon = True
     mins_between_updates = 120
@@ -59,7 +58,7 @@ class BaseWidget(ABC, Thread):
 
     @abstractmethod
     def update(self):
-        """Method called by the controller class to update widgets"""
+        """Update the information displayed by the widget."""
 
     def __repr__(self):
         return "%r: label=%s" % (super().__repr__(), self.label)
