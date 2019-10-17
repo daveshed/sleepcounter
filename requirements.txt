@@ -1,2 +1,2 @@
-linearstage>=0.2.1
+stage>=0.3.0
 max7219

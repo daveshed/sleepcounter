@@ -4,7 +4,7 @@ setup(
     version="2.2.5",
     packages=find_packages(),
     install_requires=[
-        'linearstage>=0.2.1',
+        'stage>=0.3.0',
         'max7219'
         ],
 )

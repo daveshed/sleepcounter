@@ -39,11 +39,11 @@ class TestBase(TestCase):
         self.calendar = Calendar(EVENTS)
         self.mock_matrix = Mock()
         self.display_widget = LedMatrixWidget(self.mock_matrix, self.calendar)
-        self.linearstage = MockStage()
+        self.stage = MockStage()
         self.seconds_stage_widget = SecondsStageWidget(
-            stage=self.linearstage, calendar=self.calendar)
+            stage=self.stage, calendar=self.calendar)
         self.sleeps_stage_widget = SleepsStageWidget(
-            stage=self.linearstage, calendar=self.calendar)
+            stage=self.stage, calendar=self.calendar)
         self.app = None
 
     def tearDown(self):
@@ -70,7 +70,7 @@ class IntegrationSecondCounterWithDisplay(TestBase):
         with mock_datetime(target=today):
             sleep(APP_UPDATE_WAIT_SEC)
         # stage should home first
-        self.assertEqual(MockStage.MIN_POS, self.linearstage.position)
+        self.assertEqual(MockStage.MIN_POS, self.stage.position)
         xmas = datetime.date(year=2018, month=12, day=25)
         deadline = datetime.datetime.combine(xmas, SleepChecker.WAKE_UP_TIME)
         time_to_event = deadline - today
@@ -80,7 +80,7 @@ class IntegrationSecondCounterWithDisplay(TestBase):
             sleep(APP_UPDATE_WAIT_SEC)
         expected_position = \
             int(time_elapsed / time_to_event * MockStage.MAX_POS)
-        self.assertEqual(expected_position, self.linearstage.position)
+        self.assertEqual(expected_position, self.stage.position)
 
     @skip("second stage counter deprecated")
     def test_led_matrix_updates_display(self):
@@ -93,7 +93,7 @@ class IntegrationSecondCounterWithDisplay(TestBase):
         with mock_datetime(target=today):
             sleep(APP_UPDATE_WAIT_SEC)
         self.assertIn(
-            call('Christmas in 2 sleeps'), 
+            call('Christmas in 2 sleeps'),
             self.mock_matrix.show_message.call_args_list)
 
 
@@ -115,7 +115,7 @@ class IntegrationSleepsCounterWithDisplay(TestBase):
         with mock_datetime(target=reset_time):
             sleep(APP_UPDATE_WAIT_SEC)
         # stage should reset and move to minimum position
-        self.assertEqual(MockStage.MIN_POS, self.linearstage.position)
+        self.assertEqual(MockStage.MIN_POS, self.stage.position)
         expected_sleeps = 2
         # another sleep elapses
         sleeps_elapsed = 1
@@ -124,7 +124,7 @@ class IntegrationSleepsCounterWithDisplay(TestBase):
             sleep(APP_UPDATE_WAIT_SEC)
         expected_position = \
             int(sleeps_elapsed / expected_sleeps * MockStage.MAX_POS)
-        self.assertEqual(expected_position, self.linearstage.position)
+        self.assertEqual(expected_position, self.stage.position)
 
     def test_led_matrix_updates_display(self):
         today = datetime.datetime(
